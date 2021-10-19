@@ -8,10 +8,12 @@
 #include <utility>
 #include <queue>
 #include <cstddef>
+#include <array>
+#include <stack>
 
 
 
-typedef std::pair<int, int> pi;
+using pi=std::pair<int, int>;
 
 void Graph::addEdge(int v,const Edge& edge) {
     if(v < 0 || edge.getValue() < 0)
@@ -19,7 +21,6 @@ void Graph::addEdge(int v,const Edge& edge) {
     adj_[v].push_back(edge);
 
     num_vertices();
-
 }
 
 
@@ -27,6 +28,21 @@ void Graph::cleanVisited() {
     for (const auto& element : visited_) {
         visited_[element.first] = false;
     }
+}
+
+std::vector<std::vector<double>> Graph::get_adjecency_matrix() {
+    std::vector<std::vector<double>> m(n_vertices_ , std::vector<double> (n_vertices_, std::numeric_limits<double>::infinity()));
+    for(const auto& element: adj_) {
+        for(const auto& element1: element.second) {
+            m[element.first][element1.getValue()] = element1.getWeight();
+        }
+    }
+    // Distance from note to itself is 0
+    for(std::size_t i {0}; i < n_vertices_; ++i) {
+        m[i][i] = 0;
+    }
+
+    return m;
 }
 
 void Graph::num_vertices() {
@@ -46,6 +62,10 @@ void Graph::num_vertices() {
     }
     cleanVisited();
     
+}
+
+std::size_t Graph::get_num_vertices() {
+    return n_vertices_;
 }
 
 int Graph::dfstopsort(int i, int at, std::vector<int>& ordering) {
@@ -204,6 +224,92 @@ std::vector<double> Graph::bellmanFord(int start) {
 }
 
 
-std::size_t Graph::get_num_vertices() {
-    return n_vertices_;
+    
+std::vector<std::vector<double>> Graph::floydWarshall() {
+    // Create adjecency matrix for Graph
+    
+    std::vector<std::vector<double>> m {get_adjecency_matrix()};
+
+    std::vector<std::vector<double>> dp(n_vertices_ , std::vector<double> (n_vertices_,0));
+    std::vector<std::vector<double>> next(n_vertices_ , std::vector<double> (n_vertices_,0));
+
+    for(std::size_t i {0}; i < n_vertices_; ++i) {
+        for(std::size_t j {0}; j < n_vertices_; ++j) {
+            dp[i][j] = m[i][j];
+            if(m[i][j] != std::numeric_limits<double>::infinity())
+                next[i][j] = j;
+        }
+    }
+    
+    // Execute Floyd Warshall algo
+    for(std::size_t k {0}; k < n_vertices_; ++k) {
+        for(std::size_t i {0}; i < n_vertices_; ++i) {
+            for (std::size_t j {0}; j < n_vertices_; ++j) {
+                if(dp[i][k] + dp[k][j] < dp[i][j]) {
+                    dp[i][j] = dp[i][k] + dp[k][j];
+                    next[i][j] =  dp[i][k];
+                }
+            }
+        }
+    }
+    // Catch negative cycles
+    for(std::size_t k {0}; k < n_vertices_; ++k) {
+        for(std::size_t i {0}; i < n_vertices_; ++i) {
+            for (std::size_t j {0}; j < n_vertices_; ++j) {
+                if(dp[i][k] + dp[k][j] < dp[i][j]) {
+                    dp[i][j] = -std::numeric_limits<double>::infinity();
+                    next[i][j] = -1;
+                }
+            }
+        }
+    }
+
+    return dp;
+}
+
+
+void Graph::tarjansDfs(std::size_t at,int& scc_count,int& id, std::stack<int>& stack, std::vector<int>& ids, std::vector<bool>& on_stack, std::vector<int>& low) {
+    static const int unvisited {-1};
+    stack.push(at);
+    on_stack[at] = true;
+    ids[at] = low[at] = id++;
+
+    // Visit all neighbors and min low-link on callback
+    for(const auto& element : adj_[at]) {
+        if(ids[element.getValue()] == unvisited)
+            tarjansDfs(element.getValue(), scc_count, id, stack, ids, on_stack, low);
+        if(on_stack[element.getValue()])
+            low[at] = std::min(low[at], low[element.getValue()]) ;
+        
+    }
+
+    // If at is the beginning of a completed strongly connected component
+    // empyt Stack until we are back at beginning of the SCC
+    if(ids[at] == low[at]) {
+        for(int node {stack.top()}; !stack.empty(); node = stack.top()) {
+            stack.pop();
+            on_stack[node] = false;
+            low[node] = ids[at];
+            if(node==at) break;
+        }
+        ++scc_count;
+    }
+}
+
+std::vector<int> Graph::tarjans() {
+    const int unvisited {-1};
+    int id {0};
+    int scc_count {0};
+    std::vector<int> ids (n_vertices_, unvisited);
+    std::vector<int> low (n_vertices_, 0);
+    std::vector<bool> on_stack (n_vertices_, false);
+    std::stack<int> stack {};
+
+    for(std::size_t i {0}; i < n_vertices_; ++i) ids[i] = unvisited;
+    for(std::size_t i {0}; i < n_vertices_; ++i) {
+        if(ids[i] == unvisited)
+            tarjansDfs(i, scc_count,id, stack, ids, on_stack, low);
+    }
+
+    return low;
 }
