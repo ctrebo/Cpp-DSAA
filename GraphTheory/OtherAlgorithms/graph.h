@@ -32,25 +32,16 @@ private:
     // itself is 0 and not reachable nodes are markes as infinity
     std::vector<std::vector<double>> get_adjecency_matrix();
 
-    // Functions and subfunctions for topsort
-    int dfstopsort(int i, int at, std::vector<int>& ordering);
 
-    // Functions and subfunctions for optiamal Path with dijkstras algo
-    std::pair<std::vector<double>, std::vector<double>> dijkstrasOptimalPath(int start);
+    // Functions and subfunctions for tarjans
+    void tarjansDfs(std::size_t at,int& scc_count, int& id, std::stack<int>& stack, std::vector<int>& ids, std::vector<bool>& on_stack, std::vector<int>& low);    
 
 public:
     // Function to add an edge to graph
     void addEdge(int v,const Edge& edge);
 
-    std::vector<int> topsort();
-    
-    // Used double vectors because double has infinity property
-    std::vector<double> dagShortestPath(int start);
-    std::vector<double> dijkstras(int start);
-    std::vector<double> mainDijkstrasOptimalPath(int start, int end);
-    std::vector<double> bellmanFord(int start);
-    std::vector<std::vector<double>> floydWarshall();
-
+    // Algorithm to find strongly connected components
+    std::vector<int> tarjans();
 
     std::size_t get_num_vertices();
 
