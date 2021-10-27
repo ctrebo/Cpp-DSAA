@@ -10,6 +10,8 @@
 #include <cstddef>
 #include <array>
 #include <stack>
+#include <utility>
+
 
 
 
@@ -32,9 +34,10 @@ private:
     // itself is 0 and not reachable nodes are markes as infinity
     std::vector<std::vector<double>> get_adjecency_matrix();
 
-
     // Functions and subfunctions for tarjans
     void tarjansDfs(std::size_t at,int& scc_count, int& id, std::stack<int>& stack, std::vector<int>& ids, std::vector<bool>& on_stack, std::vector<int>& low);    
+
+    
 
 public:
     // Function to add an edge to graph
@@ -42,6 +45,7 @@ public:
 
     // Algorithm to find strongly connected components
     std::vector<int> tarjans();
+
 
     std::size_t get_num_vertices();
 
