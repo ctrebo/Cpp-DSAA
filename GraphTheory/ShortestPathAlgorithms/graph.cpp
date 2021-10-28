@@ -95,10 +95,7 @@ std::vector<int> Graph::topsort() {
 
 std::vector<double> Graph::dagShortestPath(int start) {
     std::vector<int> topOrder {topsort()};
-    std::vector<double> dist {};
-    for(std::size_t i{0}; i < n_vertices_; ++i) {
-        dist.push_back(std::numeric_limits<double>::infinity());
-    }
+    std::vector<double> dist ( n_vertices_,std::numeric_limits<double>::infinity() );
     dist[start]=0;
 
     for(std::size_t i{0}; i < n_vertices_; ++i) {
@@ -122,10 +119,7 @@ std::vector<double> Graph::dagShortestPath(int start) {
 // Pi = std::pair<int, int>
 std::vector<double> Graph::dijkstras(int start) {
     std::priority_queue<pi, std::vector<pi>, std::greater<pi> > pq;
-    std::vector<double> dist {};
-    for(std::size_t i{0}; i < n_vertices_; ++i) {
-        dist.push_back(std::numeric_limits<double>::infinity());
-    }
+    std::vector<double> dist (n_vertices_, std::numeric_limits<double>::infinity());
     dist[start]=0;
     pq.push(std::make_pair(start, 0));
     while(!pq.empty()) {
@@ -150,14 +144,8 @@ std::vector<double> Graph::dijkstras(int start) {
 
 std::pair<std::vector<double>, std::vector<double>> Graph::dijkstrasOptimalPath(int start) {
     std::priority_queue<pi, std::vector<pi>, std::greater<pi> > pq;
-    std::vector<double> dist {};
-    for(std::size_t i{0}; i < n_vertices_; ++i) {
-        dist.push_back(std::numeric_limits<double>::infinity());
-    }
-    std::vector<double> prev;
-    for(std::size_t i{0}; i<n_vertices_; ++i) {
-        prev.push_back(-1);
-    }
+    std::vector<double> dist ( n_vertices_, std::numeric_limits<double>::infinity() );
+    std::vector<double> prev (n_vertices_, -1);
     dist[start]=0;
     pq.push(std::make_pair(start, 0));
     while(!pq.empty()) {
@@ -195,10 +183,7 @@ std::vector<double> Graph::mainDijkstrasOptimalPath(int start, int end) {
 
 
 std::vector<double> Graph::bellmanFord(int start) {
-    std::vector<double> dist {};
-    for(std::size_t i{0}; i < n_vertices_; ++i) {
-        dist.push_back(std::numeric_limits<double>::infinity());
-    }
+    std::vector<double> dist ( n_vertices_, std::numeric_limits<double>::infinity() );
     dist[start] =0;
     for(std::size_t i{0}; i< n_vertices_-1; ++i) {
         for(std::size_t j {0}; j<n_vertices_-1; ++j) {
