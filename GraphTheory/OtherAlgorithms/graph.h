@@ -37,6 +37,11 @@ private:
     // Functions and subfunctions for tarjans
     void tarjansDfs(std::size_t at,int& scc_count, int& id, std::stack<int>& stack, std::vector<int>& ids, std::vector<bool>& on_stack, std::vector<int>& low);    
 
+    // Functions and subfunctions for eleurianPath
+    void countInAndOutEulerianPath(std::vector<int>& in, std::vector<int>& out);
+    bool graphHasEulerianPath(const std::vector<int> in, const std::vector<int> out);
+    int findStartNodeEulerianPath(const std::vector<int> in, const std::vector<int> out);
+    void dfsEulerianPath(int at, std::vector<int>& in, std::vector<int>& out, std::vector<int>& path);
     
 
 public:
@@ -46,6 +51,9 @@ public:
     // Algorithm to find strongly connected components
     std::vector<int> tarjans();
 
+
+    // Algorithm to find Euelerian path
+    std::vector<int> eulerianPath();
 
     std::size_t get_num_vertices();
 

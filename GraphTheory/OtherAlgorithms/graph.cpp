@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <array>
 #include <stack>
+#include <tuple>
 
 
 
@@ -115,3 +116,59 @@ std::vector<int> Graph::tarjans() {
     return low;
 }
 
+void Graph::countInAndOutEulerianPath(std::vector<int>& in, std::vector<int>& out) {
+    for(auto& id_vertice: adj_) {
+        // Vertices.first gets access to n if n = std::map<n, ...> and
+        // Vertices.second gets access to x if x = std::map<..., x>
+        for(auto& edge: id_vertice.second) {
+            ++in[edge.getValue()];
+            ++out[id_vertice.first];
+        }
+    }
+}
+
+// Check wether an eulerian path exists or not
+bool Graph::graphHasEulerianPath(const std::vector<int> in, const std::vector<int> out) {
+    int start_nodes{0}, end_nodes {0};
+    for(int i {0}; i<n_vertices_;++i) {
+        if(out[i] - in[i] > 1 || in[i] - out[i] > 1) return false;
+        else if(out[i] - in[i] == 1 ) ++start_nodes;
+        else if(in[i] - out[i] == 1) ++end_nodes;
+    }
+    return ((start_nodes==0 && end_nodes==0) || (start_nodes==1 && end_nodes==1));
+}
+
+int Graph::findStartNodeEulerianPath(const std::vector<int> in, const std::vector<int> out) {
+    int start {0};
+    for(int i{0}; i < n_vertices_; ++i) {
+        // Unique starting node
+        if(out[i]- in[i] == 1) return i;
+        // Start at any node with outgoing edge
+        if(out[i] > 0) start=i;
+    return start;
+    }
+    return 0;
+}
+
+
+void Graph::dfsEulerianPath(int at, std::vector<int>& in, std::vector<int>& out, std::vector<int>& path) {
+    // While the current node still has outgoing edges
+    while(out[at] != 0) {
+        Edge next_node {adj_[at][--out[at]]};
+        dfsEulerianPath(next_node.getValue(), in, out, path);
+    }
+    path.insert(path.begin(), at);
+}
+
+std::vector<int> Graph::eulerianPath() {
+    std::vector<int> in (n_vertices_, 0);
+    std::vector<int> out (n_vertices_, 0);
+    std::vector<int> path {};
+    countInAndOutEulerianPath(in, out);
+    
+    if(!graphHasEulerianPath(in, out)) return path;
+    dfsEulerianPath(findStartNodeEulerianPath(in,out), in, out, path);
+    
+    if(path.size() == n_vertices_ + 1) return path;
+    return std::vector<int> {};
+}
