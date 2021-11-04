@@ -13,9 +13,6 @@
 #include <tuple>
 
 
-
-using pi=std::pair<int, int>;
-
 void Graph::addEdge(int v,const Edge& edge) {
     if(v < 0 || edge.getValue() < 0)
         throw std::length_error("v or w can not be smaller than 0");
