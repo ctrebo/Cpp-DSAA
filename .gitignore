@@ -2,3 +2,5 @@
 **/main.exe
 **/make: *** [makefile
 **/main.cpp
+**/build/**
+**/.syntastic_cpp_config
