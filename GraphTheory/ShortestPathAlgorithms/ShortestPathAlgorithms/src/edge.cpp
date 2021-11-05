@@ -16,4 +16,3 @@ int Edge::getWeight() const {
 int Edge::getValue() const {
     return value_;
 }
-
