@@ -16,5 +16,6 @@ add_executable(Main src/main.cpp)
 target_link_libraries(Main PUBLIC Edge)
 target_link_libraries(Main PUBLIC Graph)
 target_link_libraries(Main PUBLIC UGraph)
+target_link_libraries(Main PUBLIC FlowGraph)
 
 target_include_directories(Main PUBLIC "${PROJECT_SOURCE_DIR}/OtherAlgorithms")
