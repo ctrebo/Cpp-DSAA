@@ -6,9 +6,9 @@ public:
     int value_ {};
     Node* next_ {};
 
-    Node(): next_ {nullptr} {}
-    Node(int value): value_ {value}, next_ {nullptr} {}
+    Node();
+    Node(int value);
 
 };
 
-#endif
+#endif // NODE_HPP
