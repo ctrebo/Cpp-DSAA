@@ -1,8 +1,7 @@
 #ifndef LLIST_HPP
 #define LLIST_HPP
 
-#include "LinkedListClass/node.hpp"
-
+#include "node.hpp"
 #include <iostream>
 #include <cstddef> 
 #include <stdexcept>
