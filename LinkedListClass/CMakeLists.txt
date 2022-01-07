@@ -14,5 +14,6 @@ add_subdirectory(LinkedListClass)
 add_executable(Main src/main.cpp)
 
 target_link_libraries(Main PUBLIC lList)
-
 target_include_directories(Main PUBLIC "${PROJECT_SOURCE_DIR}/LinkedListClass")
+
+install(TARGETS Main DESTINATION bin)
