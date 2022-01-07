@@ -25,6 +25,8 @@ public:
     lList();
     lList(const lList& lL);
     
+    ~lList();
+
     std::size_t length() const;
 
     void addAtBeginning(T value);
@@ -50,6 +52,11 @@ template <class T>
 Node<T>* getNewNode(T value) {
     Node<T>* new_node {new Node<T> {value}};
     return new_node;
+}
+
+template <class T>
+lList<T>::~lList() {
+    deleteNodes();
 }
 
 template <class T>

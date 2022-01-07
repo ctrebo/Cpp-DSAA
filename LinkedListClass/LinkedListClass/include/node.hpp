@@ -5,7 +5,7 @@ template <class T>
 class Node {
 public:
     T value_ {};
-    Node* next_ {};
+    Node<T>* next_ {};
 
     Node();
     Node(T value);
