@@ -13,7 +13,7 @@ add_subdirectory(Array)
 
 add_executable(Main src/main.cpp)
 
-target_link_libraries(Main PUBLIC ArrayClasst)
+target_link_libraries(Main PUBLIC ArrayClass)
 target_include_directories(Main PUBLIC "${PROJECT_SOURCE_DIR}/Array")
 
 install(TARGETS Main DESTINATION bin)
