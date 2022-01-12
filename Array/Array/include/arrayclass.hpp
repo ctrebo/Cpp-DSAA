@@ -6,6 +6,7 @@
 #include <initializer_list>
 #include <exception>
 #include <iostream>
+#include <algorithm>
 
 using size_type = std::size_t;
 
@@ -22,17 +23,29 @@ public:
     constexpr size_type size() const noexcept;
     constexpr size_type length() const noexcept;
     constexpr bool empty() const noexcept;
-    T& at(size_type index);
-    const T& at(size_type index) const;
     constexpr T& front() const;
     constexpr T& back() const;
     T* data() const noexcept;
 
-    constexpr T* begin() const noexcept;
-    constexpr T* end() const noexcept;
+    // Pointer to last and first element of Array
+    constexpr T* begin() noexcept;
+    constexpr const T* begin() const noexcept;
+    constexpr const T* cbegin() const noexcept;
+    //constexpr T* rbegin() noexcept;
 
-    const T& operator[] (size_type index) const;
+    constexpr T* end() noexcept;
+    constexpr const T* end() const noexcept;
+    constexpr const T* cend() const noexcept;
+    //constexpr T* rend() noexcept;
+
+    // Access array 
     T& operator[] (size_type index);
+    const T& operator[] (size_type index) const;
+    T& at(size_type index);
+    const T& at(size_type index) const;
+
+    // Operations
+    void fill(const T& value);
 };
 
 template<typename T, typename... Args>
@@ -111,13 +124,39 @@ T* ArrayClass<T, N>::data() const noexcept {
 }
 
 template<class T, size_type N>
-constexpr T* ArrayClass<T, N>::begin() const noexcept {
+constexpr T* ArrayClass<T, N>::begin() noexcept {
     return array_.get();
 }
 
 template<class T, size_type N>
-constexpr T* ArrayClass<T, N>::end() const noexcept {
+constexpr const T* ArrayClass<T, N>::begin() const noexcept {
+    return array_.get();
+}
+
+template<class T, size_type N>
+constexpr const T* ArrayClass<T, N>::cbegin() const noexcept {
+    return array_.get();
+}
+
+
+template<class T, size_type N>
+constexpr T* ArrayClass<T, N>::end() noexcept {
     return &(array_[size_]);
+}
+
+template<class T, size_type N>
+constexpr const T* ArrayClass<T, N>::end() const noexcept {
+    return &(array_[size_]);
+}
+
+template<class T, size_type N>
+constexpr const T* ArrayClass<T, N>::cend() const noexcept {
+    return &(array_[size_]);
+}
+
+template<class T, size_type N>
+void ArrayClass<T, N>::fill(const T& value) {
+    std::fill(begin(), end(), value);
 }
 
 #endif // ARRAYCLASS
