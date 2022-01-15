@@ -1,7 +1,6 @@
 #ifndef LLIST_HPP
 #define LLIST_HPP
 
-#include "node.hpp"
 #include <iostream>
 #include <cstddef> 
 #include <stdexcept>
@@ -16,12 +15,28 @@ lList<T> operator+(lList<T> &lL1, const lList<T> &lL2);
 template <class T>
 class lList {
 private:
-    Node<T>* head_ref_ {};
+    class Node {
+    public:
+        T value_ {};
+        Node* next_ {};
+
+        Node(): next_ {nullptr} {}
+        Node(T value): value_ {value}, next_ {nullptr} {}
+        
+        static Node* getNewNode(T value) {
+            Node* new_node {new Node {value}};
+            return new_node;
+        }
+    };
+
+private:
+    Node* head_ref_ {};
     std::size_t length_ {};
 
     void deepCopy(const lList& lL);
     void deleteNodes();
 public:
+
     lList();
     lList(const lList& lL);
     
@@ -38,21 +53,17 @@ public:
     void reverse();
     bool keyExists(T key);
     T& at(int index);
-    Node<T>* nodeAt(int index);
+    Node* nodeAt(int index);
     void swapNodes(int index1, int index2);
     void sort();
 
     T& operator[] (int index);
-    const int& operator[] (int index) const;
+    const T& operator[] (int index) const;
     lList<T>& operator= (const lList<T>& lL);
 	friend lList<T> operator+<>(lList<T> &lL1, const lList<T> &lL2);
 };
 
-template <class T>
-Node<T>* getNewNode(T value) {
-    Node<T>* new_node {new Node<T> {value}};
-    return new_node;
-}
+
 
 template <class T>
 lList<T>::~lList() {
@@ -62,7 +73,7 @@ lList<T>::~lList() {
 template <class T>
 void lList<T>::deepCopy(const lList<T>& lL) {
     if(head_ref_) delete head_ref_;
-    Node<T>* curr_node {lL.head_ref_};
+    Node* curr_node {lL.head_ref_};
     if (lL.head_ref_) {
         while(curr_node) {
             this->append(curr_node->value_);
@@ -76,8 +87,8 @@ void lList<T>::deepCopy(const lList<T>& lL) {
 template <class T>
 void lList<T>::deleteNodes() {
     if(!head_ref_) return;
-    Node<T>* node_to_delete {head_ref_};
-    Node<T>* next_node {};
+    Node* node_to_delete {head_ref_};
+    Node* next_node {};
     while(node_to_delete) {
        next_node = node_to_delete->next_;
        delete node_to_delete;
@@ -104,7 +115,7 @@ std::size_t lList<T>::length() const {
 
 template <class T>
 void lList<T>::addAtBeginning(T value){ 
-   Node<T>* new_node {getNewNode(value) };
+   Node* new_node {Node::getNewNode(value) };
    new_node->next_ = head_ref_;
    head_ref_ = new_node;
    ++length_;
@@ -112,13 +123,13 @@ void lList<T>::addAtBeginning(T value){
 
 template <class T>
 void lList<T>::append(T value){ 
-    Node<T>* new_node {getNewNode(value) };
+    Node* new_node {Node::getNewNode(value) };
    ++length_;
     if (!head_ref_) {
         head_ref_ = new_node;
         return;
     }
-    Node<T>* tmp {head_ref_};
+    Node* tmp {head_ref_};
     while(tmp->next_) {
         tmp = tmp->next_;
     }
@@ -136,8 +147,8 @@ void lList<T>::deleteKey(T key) {
         --length_; 
         return;
     }
-    Node<T>* prev_node {};
-    Node<T>* node_to_delete{head_ref_};
+    Node* prev_node {};
+    Node* node_to_delete{head_ref_};
     while(node_to_delete->value_ != key && node_to_delete != nullptr) {
         prev_node = node_to_delete;
         node_to_delete = node_to_delete->next_;
@@ -161,10 +172,10 @@ void lList<T>::deleteAtPosition(int position) {
         head_ref_ = head_ref_->next_;
         return;
     }
-    Node<T>* prev_node {};
+    Node* prev_node {};
     // Start from curr_position 1 becasue we already checked if
     // position == 0
-    Node<T>* node_to_delete{head_ref_->next_};
+    Node* node_to_delete{head_ref_->next_};
     int curr_position {1};
     while(curr_position != position) {
         prev_node = node_to_delete;
@@ -180,13 +191,13 @@ template <class T>
 void lList<T>::pop() {
     if(!head_ref_)
         return;
-    Node<T>* node_to_delete {head_ref_};
+    Node* node_to_delete {head_ref_};
     if(length_ == 1) {
         delete node_to_delete;
         head_ref_ = nullptr;
         return;
     }
-    Node<T>* prev_node {};
+    Node* prev_node {};
     while(node_to_delete->next_){
         prev_node = node_to_delete;
         node_to_delete = node_to_delete->next_;
@@ -197,7 +208,7 @@ void lList<T>::pop() {
 
 template <class T>
 void lList<T>::print() {
-    Node<T>* tmp {head_ref_};
+    Node* tmp {head_ref_};
     while(tmp) {
         std::cout << tmp->value_ << ' ';
         tmp = tmp->next_;
@@ -210,9 +221,9 @@ void lList<T>::reverse() {
     if (!head_ref_) {
         return;
     }
-    Node<T>* prev_node {nullptr};
-    Node<T>* curr_node{head_ref_};
-    Node<T>* curr_node_next {};
+    Node* prev_node {nullptr};
+    Node* curr_node{head_ref_};
+    Node* curr_node_next {};
     while(curr_node) {
         curr_node_next = curr_node->next_;
         curr_node->next_ = prev_node;
@@ -227,7 +238,7 @@ template <class T>
 bool lList<T>::keyExists(T key) {
     if (!head_ref_)
         return false;
-    Node<T>* tmp {head_ref_};
+    Node* tmp {head_ref_};
     while(tmp) {
         if(tmp->value_ == key) {
             return true;
@@ -243,7 +254,7 @@ T& lList<T>::at(int index) {
         throw std::out_of_range("Index out of range!");
     if (!head_ref_)
         throw std::length_error("There are no elements in the list");
-    Node<T>* tmp {head_ref_};
+    Node* tmp {head_ref_};
     for(std::size_t i{0}; i < index; ++i) {
         tmp = tmp->next_;
     }
@@ -251,12 +262,12 @@ T& lList<T>::at(int index) {
 }
 
 template <class T>
-Node<T>* lList<T>::nodeAt(int index) {
+typename lList<T>::Node* lList<T>::nodeAt(int index) {
     if(index < 0 || index >= length_) 
         throw std::out_of_range("Index out of range!");
     if (!head_ref_)
         throw std::length_error("There are no elements in the list");
-    Node<T>* tmp {head_ref_};
+    Node* tmp {head_ref_};
     for(std::size_t i{0}; i < index; ++i) 
         tmp = tmp->next_;
     return tmp;
@@ -265,8 +276,8 @@ Node<T>* lList<T>::nodeAt(int index) {
 template <class T>
 void lList<T>::swapNodes(int index1, int index2) {
     if(index1 == index2) return;
-    Node<T>* first_node {nodeAt(index1)};
-    Node<T>* second_node {nodeAt(index2)};
+    Node* first_node {nodeAt(index1)};
+    Node* second_node {nodeAt(index2)};
     T a = first_node->value_;
     first_node->value_ = second_node->value_;
     second_node->value_ = a;
@@ -287,7 +298,7 @@ template <class T>
 T& lList<T>::operator[] (int index) {
     if(index < 0 || index >= length_ || !head_ref_) 
         throw std::out_of_range("Index out of range!");
-    Node<T>* tmp {head_ref_};
+    Node* tmp {head_ref_};
     for(std::size_t i{0}; i < index; ++i) {
         tmp = tmp->next_;
     }
@@ -295,10 +306,10 @@ T& lList<T>::operator[] (int index) {
 }
 
 template <class T>
-const int& lList<T>::operator[] (int index) const {
+const T& lList<T>::operator[] (int index) const {
     if(index < 0 || index >= length_ || !head_ref_) 
         throw std::out_of_range("Index out of range!");
-    Node<T>* tmp {head_ref_};
+    Node* tmp {head_ref_};
     for(std::size_t i{0}; i < index; ++i) {
         tmp = tmp->next_;
     }
@@ -311,7 +322,7 @@ lList<T> operator+(lList<T> &lL1, const lList<T> &lL2) {
         return lL1;
     
     lL1.length_ = lL1.length_ + lL2.length_;
-    Node<T>* last_node_in_list {lL1.head_ref_};
+    auto last_node_in_list {lL1.head_ref_};
     while(last_node_in_list->next_) {
         last_node_in_list = last_node_in_list->next_;
     }
