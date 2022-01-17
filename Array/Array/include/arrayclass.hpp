@@ -29,7 +29,9 @@ public:
     ArrayClass();
     ArrayClass(std::initializer_list<T> l);
     ArrayClass(const ArrayClass& arr);
-    ArrayClass(const ArrayClass&& arr);
+    ArrayClass(const ArrayClass&& arr) {
+        
+    }
     
     constexpr size_type size() const noexcept;
     constexpr size_type length() const noexcept;
