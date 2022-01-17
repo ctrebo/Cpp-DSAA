@@ -27,12 +27,13 @@ private:
 public:
     // Constructors
     ArrayClass();
-    ArrayClass(std::initializer_list<T> l);
+    //ArrayClass(std::initializer_list<T> l);
     ArrayClass(const ArrayClass& arr);
-    ArrayClass(const ArrayClass&& arr) {
-        
-    }
-    
+    ArrayClass(ArrayClass&& arr);
+
+    template<class Type, class ...Args>
+    ArrayClass(Type&& type, Args&&... args): size_ {1 + sizeof...(Args)}, array_ {new Type[size_] {std::forward<T>(type), std::forward<Args>(args)...}} {}
+
     constexpr size_type size() const noexcept;
     constexpr size_type length() const noexcept;
     constexpr bool empty() const noexcept;
@@ -66,6 +67,10 @@ public:
 
 };
 
+template<class Type, class ...Args>
+ArrayClass(Type&& type, Args&&... args) -> ArrayClass<Type, 1 + sizeof...(args)>;
+
+
 template<typename T, typename... Args>
 requires are_same_v<T, Args...>
 constexpr auto makeArray(T&& t, Args&&... args) -> ArrayClass<T, 1 + sizeof...(Args)> {
@@ -75,19 +80,19 @@ constexpr auto makeArray(T&& t, Args&&... args) -> ArrayClass<T, 1 + sizeof...(A
 template<class T, size_type N>
 ArrayClass<T, N>::ArrayClass(): array_ {std::make_unique<T[]>(N)} ,size_ { N } {}
 
-template<class T, size_type N>
-ArrayClass<T, N>::ArrayClass(std::initializer_list<T> l) {
-    if (N != l.size())
-        throw std::out_of_range("Template Argument n doesnt match initializer list length!");
-    array_ = std::make_unique<T[]>(l.size());
-    size_ = l.size(); 
-    int count{ 0 };
-    for (auto& element : l)
-    {
-        array_[count] = element;
-        ++count;
-    }
-}
+//template<class T, size_type N>
+//ArrayClass<T, N>::ArrayClass(std::initializer_list<T> l) {
+//    if (N != l.size())
+//        throw std::out_of_range("Template Argument n doesnt match initializer list length!");
+//    array_ = std::make_unique<T[]>(l.size());
+//    size_ = l.size(); 
+//    int count{ 0 };
+//    for (auto& element : l)
+//    {
+//        array_[count] = element;
+//        ++count;
+//    }
+//}
 
 template<class T, size_type N>
 ArrayClass<T, N>::ArrayClass(const ArrayClass& arr): array_ {std::make_unique<T[]>(arr.size_)}, size_ {arr.size_} {
@@ -97,8 +102,8 @@ ArrayClass<T, N>::ArrayClass(const ArrayClass& arr): array_ {std::make_unique<T[
 }
 
 template<class T, size_type N>
-ArrayClass<T, N>::ArrayClass(const ArrayClass&& arr): size_ {arr.size_}, array_ {std::move(arr.array_)}{
-
+ArrayClass<T, N>::ArrayClass(ArrayClass&& arr): size_ {arr.size_}, array_ {std::move(arr.array_)}{
+    std::cout << "rvalue ";
 }
 
 template<class T, size_type N>
