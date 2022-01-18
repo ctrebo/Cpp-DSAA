@@ -65,6 +65,21 @@ public:
     constexpr void swap(ArrayClass& array);
 
     auto operator<=>(const ArrayClass&) const=default;
+
+    // Io operator overloading
+    friend std::ostream& operator<< (std::ostream& out, const ArrayClass& arr) {
+        out << '[';
+        for(size_type i {0}; i < arr.length(); ++i) {
+            const auto& element {arr[i]};
+            if (i == 0)
+                out << element;
+            else
+                out << ", " << element;
+        }
+        out << ']';
+        return out;
+    }
+
 };
 
 template<typename T, typename... Args>
