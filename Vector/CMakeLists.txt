@@ -9,6 +9,7 @@ project(Vector VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 add_subdirectory(Vector)
 
 add_executable(Main src/main.cpp)
