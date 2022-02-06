@@ -12,12 +12,12 @@
 template<class T>
 class TD;
 
-template<class T>
+template<class T, class Allocator = std::allocator<T>>
 class VectorClass {
 // Type aliases
 public:
     using value_type = T;
-    using allocator = std::allocator<T>;
+    using allocator = Allocator;
     using reference = value_type&;
     using const_reference = const value_type&;
     using pointer = value_type*;
@@ -34,6 +34,8 @@ private:
     allocator alloc_ {};
     pointer array_ {};
 
+    void destroyAndDealloc();
+
 public:
     // Constructors and Desctructor
     VectorClass(size_type size);
@@ -45,9 +47,9 @@ public:
     ~VectorClass(); 
 
     // Overloading assignment operator
-    VectorClass<T>& operator=(const VectorClass& other);
-    VectorClass<T>& operator=(VectorClass&& other) noexcept;
-    VectorClass<T>& operator=(std::initializer_list<T> l);
+    VectorClass<T, Allocator>& operator=(const VectorClass& other);
+    VectorClass<T, Allocator>& operator=(VectorClass&& other) noexcept;
+    VectorClass<T, Allocator>& operator=(std::initializer_list<T> l);
 
     // Assign
     void assign(size_type count, const T& value);
@@ -97,41 +99,51 @@ decltype(auto) makeVector(T&& t, Args&&... args) {
     return VectorClass<T>{ std::forward<T>(t), std::forward<Args>(args)... };
 }
 
-template<class T>
-VectorClass<T>::VectorClass(size_type size): capacity_ {size}, size_ {size}, array_ { traits_t::allocate(alloc_, capacity_) } {
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::destroyAndDealloc() {
+    iterator it{ &(array_[capacity_]) };
+    while (it != array_) {
+        traits_t::destroy(alloc_, --it);
+    }
+    traits_t::deallocate(alloc_,array_ , capacity_);
+    array_ = nullptr;
+}
+
+template<class T, class Allocator>
+VectorClass<T, Allocator>::VectorClass(size_type size): capacity_ {size}, size_ {size}, array_ { traits_t::allocate(alloc_, capacity_) } {
     for(size_type i {0}; i < size_; ++i) {
         traits_t::construct(alloc_, array_ + i, T());
     }
 }
 
-template<class T>
-VectorClass<T>::VectorClass(size_type size, const T& value): capacity_ {size}, size_ {size}, array_ { traits_t::allocate(alloc_, capacity_) } {
+template<class T, class Allocator>
+VectorClass<T, Allocator>::VectorClass(size_type size, const T& value): capacity_ {size}, size_ {size}, array_ { traits_t::allocate(alloc_, capacity_) } {
     for(size_type i {0}; i < size_; ++i) {
         traits_t::construct(alloc_, array_ + i, value);
     }
 }
 
-template<class T>
-VectorClass<T>::VectorClass(const VectorClass& other): size_ {other.size_}, capacity_{other.capacity_}, array_ {traits_t::allocate(alloc_, capacity_)} {
+template<class T, class Allocator>
+VectorClass<T, Allocator>::VectorClass(const VectorClass& other): size_ {other.size_}, capacity_{other.capacity_}, array_ {traits_t::allocate(alloc_, capacity_)} {
     for(size_type i {0}; i < size_; ++i) {
         traits_t::construct(alloc_, array_ + i, other[i]);
     }
 }
 
-template<class T>
-VectorClass<T>::VectorClass(VectorClass&& other): size_ { other.size_ }, capacity_ {other.capacity_}, array_ {other.array_} {
+template<class T, class Allocator>
+VectorClass<T, Allocator>::VectorClass(VectorClass&& other): size_ { other.size_ }, capacity_ {other.capacity_}, array_ {other.array_} {
     other.array_ = nullptr;
     other.size_ = 0;
     other.capacity_ = 0;
 }
 
-template<class T>
-VectorClass<T>::~VectorClass() {
-    traits_t::deallocate(alloc_, array_ , capacity_);
+template<class T, class Allocator>
+VectorClass<T, Allocator>::~VectorClass() {
+    destroyAndDealloc();
 }
 
-template<class T>
-VectorClass<T>::VectorClass(std::initializer_list<T> l): capacity_ {l.size() * 2}, size_ { l.size()}, array_ { traits_t::allocate(alloc_, capacity_)} {
+template<class T, class Allocator>
+VectorClass<T, Allocator>::VectorClass(std::initializer_list<T> l): capacity_ {l.size() * 2}, size_ { l.size()}, array_ { traits_t::allocate(alloc_, capacity_)} {
     size_type counter {0};
     for(auto& element: l) {
         traits_t::construct(alloc_, array_ + counter, element);
@@ -139,12 +151,12 @@ VectorClass<T>::VectorClass(std::initializer_list<T> l): capacity_ {l.size() * 2
     }
 }
 
-template<class T>
-VectorClass<T>& VectorClass<T>::operator=(const VectorClass& other) {
+template<class T, class Allocator>
+VectorClass<T, Allocator>& VectorClass<T, Allocator>::operator=(const VectorClass& other) {
     if (&other == this)
         return *this;
 
-    traits_t::deallocate(alloc_, array_ , capacity_);
+    destroyAndDealloc();
     size_ = other.size_;
     capacity_ = other.capacity_;
     array_ = traits_t::allocate(alloc_, capacity_);
@@ -155,12 +167,12 @@ VectorClass<T>& VectorClass<T>::operator=(const VectorClass& other) {
     return *this;
 }
 
-template<class T>
-VectorClass<T>& VectorClass<T>::operator=(VectorClass&& other) noexcept {
+template<class T, class Allocator>
+VectorClass<T, Allocator>& VectorClass<T, Allocator>::operator=(VectorClass&& other) noexcept {
     if (&other == this)
         return *this;
 
-    traits_t::deallocate(alloc_, array_ , capacity_);
+    destroyAndDealloc();
     size_ = other.size_;
     other.size_ = 0;
     capacity_ = other.capacity_;
@@ -171,9 +183,9 @@ VectorClass<T>& VectorClass<T>::operator=(VectorClass&& other) noexcept {
     return *this;
 }
 
-template<class T>
-VectorClass<T>& VectorClass<T>::operator=(std::initializer_list<T> l) {
-    traits_t::deallocate(alloc_, array_ , capacity_);
+template<class T, class Allocator>
+VectorClass<T, Allocator>& VectorClass<T, Allocator>::operator=(std::initializer_list<T> l) {
+    destroyAndDealloc();
     size_ = l.size();
     capacity_ = size_ * 2;
     array_ = traits_t::allocate(alloc_, capacity_);
@@ -187,9 +199,9 @@ VectorClass<T>& VectorClass<T>::operator=(std::initializer_list<T> l) {
 }
 
 
-template<class T>
-void VectorClass<T>::assign(size_type count, const T& value) {
-    traits_t::deallocate(alloc_, array_ , capacity_);
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::assign(size_type count, const T& value) {
+    destroyAndDealloc();
     size_ = count;
     capacity_ = size_ * 2;
     array_ = traits_t::allocate(alloc_, capacity_);
@@ -198,9 +210,9 @@ void VectorClass<T>::assign(size_type count, const T& value) {
     }
 }
 
-template<class T>
-void VectorClass<T>::assign(iterator first, iterator last) {
-    traits_t::deallocate(alloc_, array_ , capacity_);
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::assign(iterator first, iterator last) {
+    destroyAndDealloc();
     size_ = std::distance(first, last);
     capacity_ = size_ * 2;
     array_ = traits_t::allocate(alloc_, capacity_);
@@ -211,9 +223,9 @@ void VectorClass<T>::assign(iterator first, iterator last) {
     }
 }
 
-template<class T>
-void VectorClass<T>::assign(std::initializer_list<T> l) {
-    traits_t::deallocate(alloc_, array_ , capacity_);
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::assign(std::initializer_list<T> l) {
+    destroyAndDealloc();
     size_ = l.size();
     capacity_ = size_ * 2;
     array_ = traits_t::allocate(alloc_, capacity_);
@@ -224,43 +236,43 @@ void VectorClass<T>::assign(std::initializer_list<T> l) {
     }
 }
 
-template<class T>
-constexpr bool VectorClass<T>::empty() const noexcept {
+template<class T, class Allocator>
+constexpr bool VectorClass<T, Allocator>::empty() const noexcept {
     return (size_ == 0);
 }
 
-template<class T>
-constexpr VectorClass<T>::size_type VectorClass<T>::size() const noexcept {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::size_type VectorClass<T, Allocator>::size() const noexcept {
     return size_;
 }
 
-template<class T>
-void VectorClass<T>::reserve(size_type new_cap) {
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::reserve(size_type new_cap) {
     if(new_cap <= capacity_) return;
     pointer new_arr  {traits_t::allocate(alloc_, new_cap)};
     for (size_type i {0}; i < size_; ++i) {
         traits_t::construct(alloc_, new_arr + i, array_[i]);
     }
-    traits_t::deallocate(alloc_, array_, capacity_);
+    destroyAndDealloc();
     capacity_ = new_cap;
     array_ = new_arr;
     new_arr = nullptr;
 }
 
-template<class T>
-constexpr VectorClass<T>::size_type VectorClass<T>::capacity() const noexcept {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::size_type VectorClass<T, Allocator>::capacity() const noexcept {
     return capacity_;
 }
 
-template<class T>
-constexpr void VectorClass<T>::push_back(const T& value) {
+template<class T, class Allocator>
+constexpr void VectorClass<T, Allocator>::push_back(const T& value) {
     if((size_ + 1) > capacity_) {
         size_type new_cap {capacity_ == 0 ? 1 : capacity_ * 2};
         pointer new_arr {traits_t::allocate(alloc_, new_cap)};
         for (size_type i {0}; i < size_; ++i) {
             traits_t::construct(alloc_, new_arr + i, std::move(array_[i]));
         }
-        traits_t::deallocate(alloc_, array_, capacity_);
+        destroyAndDealloc();
         capacity_ = new_cap;
         array_ = new_arr;
         new_arr = nullptr;
@@ -268,15 +280,15 @@ constexpr void VectorClass<T>::push_back(const T& value) {
     traits_t::construct(alloc_, array_ + (size_++), value);
 }
 
-template<class T>
-constexpr void VectorClass<T>::push_back(T&& value) {
+template<class T, class Allocator>
+constexpr void VectorClass<T, Allocator>::push_back(T&& value) {
     if((size_ + 1) > capacity_) {
         size_type new_cap {capacity_ == 0 ? 1 : capacity_ * 2};
         pointer new_arr {traits_t::allocate(alloc_, new_cap)};
         for (size_type i {0}; i < size_; ++i) {
             traits_t::construct(alloc_, new_arr + i, std::move(array_[i]));
         }
-        traits_t::deallocate(alloc_, array_, capacity_);
+        destroyAndDealloc();
         capacity_ = new_cap;
         array_ = new_arr;
         new_arr = nullptr;
@@ -286,15 +298,15 @@ constexpr void VectorClass<T>::push_back(T&& value) {
     traits_t::construct(alloc_, array_ + (size_++), value);
 }
 
-template<class T>
-void VectorClass<T>::clear() {
-    traits_t::deallocate(alloc_, array_, capacity_);
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::clear() {
+    destroyAndDealloc();
     array_ = traits_t::allocate(alloc_, capacity_);
     size_ = 0;
 }
 
-template<class T>
-void VectorClass<T>::insert(const_iterator pos,const T& value) {
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::insert(const_iterator pos,const T& value) {
     if(!((pos >= begin()) and (pos <= end()))) {
         throw std::out_of_range("Iterator is out of bounds!");
     }
@@ -311,14 +323,14 @@ void VectorClass<T>::insert(const_iterator pos,const T& value) {
             ++j;
         }
     }
-    traits_t::deallocate(alloc_, array_, capacity_);
+    destroyAndDealloc();
     capacity_ = new_capacity;
     array_ = new_arr;
     new_arr = nullptr;
 }
 
-template<class T>
-void VectorClass<T>::insert(const_iterator pos,T&& value) {
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::insert(const_iterator pos,T&& value) {
     if(!((pos >= begin()) and (pos <= end()))) {
         throw std::out_of_range("Iterator is out of bounds!");
     }
@@ -335,15 +347,15 @@ void VectorClass<T>::insert(const_iterator pos,T&& value) {
             ++j;
         }
     }
-    traits_t::deallocate(alloc_, array_, capacity_);
+    destroyAndDealloc();
     capacity_ = new_capacity;
     array_ = new_arr;
     new_arr = nullptr;
 
 }
 
-template<class T>
-void VectorClass<T>::insert(const_iterator pos, size_type count, const T& value) {
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::insert(const_iterator pos, size_type count, const T& value) {
     if(!((pos >= begin()) and (pos <= end()))) {
         throw std::out_of_range("Iterator is out of bounds!");
     }
@@ -360,13 +372,13 @@ void VectorClass<T>::insert(const_iterator pos, size_type count, const T& value)
             ++j;
         }
     }
-    traits_t::deallocate(alloc_, array_, capacity_);
+    destroyAndDealloc();
     capacity_ = new_capacity;
     array_ = new_arr;
     new_arr = nullptr;
 }
-template<class T>
-void VectorClass<T>::insert(const_iterator pos, iterator first, iterator last) {
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::insert(const_iterator pos, iterator first, iterator last) {
     const size_type count = std::distance(first, last);
     if(!((pos >= begin()) and (pos <= end()))) {
         throw std::out_of_range("Iterator is out of bounds!");
@@ -386,14 +398,14 @@ void VectorClass<T>::insert(const_iterator pos, iterator first, iterator last) {
             ++j;
         }
     }
-    traits_t::deallocate(alloc_, array_, capacity_);
+    destroyAndDealloc();
     capacity_ = new_capacity;
     array_ = new_arr;
     new_arr = nullptr;
 }
 
-template<class T>
-void VectorClass<T>::insert(const_iterator pos, std::initializer_list<T> iList) {
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::insert(const_iterator pos, std::initializer_list<T> iList) {
     const size_type count {iList.size()};
     if(!((pos >= begin()) and (pos <= end()))) {
         throw std::out_of_range("Iterator is out of bounds!");
@@ -416,86 +428,86 @@ void VectorClass<T>::insert(const_iterator pos, std::initializer_list<T> iList) 
             ++j;
         }
     }
-    traits_t::deallocate(alloc_, array_, capacity_);
+    destroyAndDealloc();
     capacity_ = new_capacity;
     array_ = new_arr;
     new_arr = nullptr;
 }
 
-template<class T>
-constexpr VectorClass<T>::iterator VectorClass<T>::begin() noexcept {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::iterator VectorClass<T, Allocator>::begin() noexcept {
     return array_;
 }
 
-template<class T>
-constexpr VectorClass<T>::const_pointer VectorClass<T>::begin() const noexcept {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::const_pointer VectorClass<T, Allocator>::begin() const noexcept {
     return array_;
 }
 
-template<class T>
-constexpr VectorClass<T>::const_pointer VectorClass<T>::cbegin() const noexcept {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::const_pointer VectorClass<T, Allocator>::cbegin() const noexcept {
     return array_;
 }
 
-template<class T>
-constexpr VectorClass<T>::iterator VectorClass<T>::end() noexcept {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::iterator VectorClass<T, Allocator>::end() noexcept {
     return &(array_[size_]);
 }
 
-template<class T>
-constexpr VectorClass<T>::const_pointer VectorClass<T>::end() const noexcept {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::const_pointer VectorClass<T, Allocator>::end() const noexcept {
     return &(array_[size_]);
 }
 
-template<class T>
-constexpr VectorClass<T>::const_pointer VectorClass<T>::cend() const noexcept {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::const_pointer VectorClass<T, Allocator>::cend() const noexcept {
     return &(array_[size_]);
 }
 
-template<class T>
-constexpr VectorClass<T>::reference VectorClass<T>::front() {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::reference VectorClass<T, Allocator>::front() {
     return array_[0];
 }
 
-template<class T>
-constexpr VectorClass<T>::const_reference VectorClass<T>::front() const {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::const_reference VectorClass<T, Allocator>::front() const {
     return array_[0];
 }
 
-template<class T>
-constexpr VectorClass<T>::reference VectorClass<T>::back() {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::reference VectorClass<T, Allocator>::back() {
     return array_[size_ - 1];
 }
 
-template<class T>
-constexpr VectorClass<T>::const_reference VectorClass<T>::back() const {
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::const_reference VectorClass<T, Allocator>::back() const {
     return array_[size_ - 1];
 }
 
-template<class T>
-VectorClass<T>::pointer VectorClass<T>::data() noexcept {
+template<class T, class Allocator>
+VectorClass<T, Allocator>::pointer VectorClass<T, Allocator>::data() noexcept {
     return array_;
 }
 
-template<class T>
-VectorClass<T>::reference VectorClass<T>::operator[] (const size_type index) {
+template<class T, class Allocator>
+VectorClass<T, Allocator>::reference VectorClass<T, Allocator>::operator[] (const size_type index) {
     return array_[index];
 }
 
-template<class T>
-VectorClass<T>::const_reference VectorClass<T>::operator[] (const size_type index) const {
+template<class T, class Allocator>
+VectorClass<T, Allocator>::const_reference VectorClass<T, Allocator>::operator[] (const size_type index) const {
     return array_[index];
 }
 
-template<class T>
-VectorClass<T>::reference VectorClass<T>::at(const size_type index) {
+template<class T, class Allocator>
+VectorClass<T, Allocator>::reference VectorClass<T, Allocator>::at(const size_type index) {
     if(!(index < size_))
         throw std::out_of_range("Index out of range");
     return array_[index];
 }
 
-template<class T>
-VectorClass<T>::const_reference VectorClass<T>::at(const size_type index) const {
+template<class T, class Allocator>
+VectorClass<T, Allocator>::const_reference VectorClass<T, Allocator>::at(const size_type index) const {
     if(!(index < size_))
         throw std::out_of_range("Index out of range");
     return array_[index];
