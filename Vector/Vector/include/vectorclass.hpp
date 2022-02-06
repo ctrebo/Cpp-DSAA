@@ -18,16 +18,16 @@ class VectorClass {
 public:
     using value_type = T;
     using allocator = Allocator;
+    using traits_t = std::allocator_traits<allocator>;
     using reference = value_type&;
     using const_reference = const value_type&;
-    using pointer = value_type*;
-    using const_pointer = const value_type*;
-    using iterator = T*;
-    using const_iterator = const T*;
-    using size_type =  std::size_t;
+    using pointer = traits_t::pointer;
+    using const_pointer = traits_t::const_pointer;
+    using iterator = traits_t::pointer;
+    using const_iterator = traits_t::const_pointer;
+    using size_type = traits_t::size_type;
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-    using traits_t = std::allocator_traits<allocator>;
 private:
     size_type capacity_ {};
     size_type size_ {};
