@@ -8,9 +8,15 @@
 #include <exception>
 #include <utility>
 #include <memory_resource>
+#include <stdexcept>
+#include <limits>
+#include <type_traits>
 
 template<class T>
 class TD;
+
+template<class T>
+concept is_it = std::is_base_of_v< std::input_iterator_tag, typename std::iterator_traits<T>::iterator_category >;
 
 template<class T, class Allocator = std::allocator<T>>
 class VectorClass {
@@ -29,21 +35,24 @@ public:
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 private:
-    size_type capacity_ {};
     size_type size_ {};
+    size_type capacity_ {};
     allocator alloc_ {};
     pointer array_ {};
 
-    void destroyAndDealloc();
 
 public:
     // Constructors and Desctructor
-    VectorClass(size_type size);
-    VectorClass(size_type size, const T& value);
-    VectorClass(const VectorClass& other);
-    VectorClass(VectorClass&& other);
-    VectorClass(std::initializer_list<T> l);
     VectorClass() = default;
+    explicit VectorClass(const Allocator& alloc) noexcept;
+    VectorClass(size_type size, const T& value=T{}, const Allocator& alloc = Allocator());
+    VectorClass(const VectorClass& other);
+    VectorClass(const VectorClass& other, const Allocator& alloc);
+    VectorClass(VectorClass&& other);
+    template<class InputIt>
+    requires is_it<InputIt>
+    VectorClass(InputIt first, InputIt last, const Allocator& alloc = Allocator());
+    VectorClass(std::initializer_list<T> l, const Allocator& alloc = Allocator());
     ~VectorClass(); 
 
     // Overloading assignment operator
@@ -61,6 +70,7 @@ public:
     constexpr size_type size() const noexcept;
     constexpr size_type capacity() const noexcept;
     void reserve(size_type new_cap);
+    void shrink_to_fit();
 
     // Modifiers
     constexpr void push_back(const T& value);
@@ -70,8 +80,11 @@ public:
     void insert(const_iterator pos, const T& value);
     void insert(const_iterator pos, T&& value);
     void insert(const_iterator pos, size_type count, const T& value);
-    void insert(const_iterator pos, iterator first, iterator last);
+    template<class InputIt>
+    requires is_it<InputIt> 
+    void insert(const_iterator pos, InputIt first, InputIt last);
     void insert( const_iterator pos, std::initializer_list<T> ilist );
+    iterator erase(const_iterator pos);
 
 
     // Pointers to first and last element
@@ -92,6 +105,14 @@ public:
     const_reference operator[] (const size_type index) const;
     reference at(const size_type index);
     const_reference at(const size_type index) const;
+
+    constexpr allocator get_allocator() const noexcept;
+
+private:
+    void destroyAndDealloc();
+    template<class Type>
+    void append(Type&& val);
+    
 };
 
 template<class T,class ... Args>
@@ -110,31 +131,45 @@ void VectorClass<T, Allocator>::destroyAndDealloc() {
 }
 
 template<class T, class Allocator>
-VectorClass<T, Allocator>::VectorClass(size_type size): capacity_ {size}, size_ {size}, array_ { traits_t::allocate(alloc_, capacity_) } {
-    for(size_type i {0}; i < size_; ++i) {
-        traits_t::construct(alloc_, array_ + i, T());
-    }
-}
+VectorClass<T, Allocator>::VectorClass(const Allocator& alloc) noexcept: size_{0}, capacity_{0}, alloc_ {alloc} {}
 
 template<class T, class Allocator>
-VectorClass<T, Allocator>::VectorClass(size_type size, const T& value): capacity_ {size}, size_ {size}, array_ { traits_t::allocate(alloc_, capacity_) } {
+VectorClass<T, Allocator>::VectorClass(size_type size, const T& value, const Allocator& alloc): capacity_ {size}, size_ {size}, alloc_ {alloc}, array_ { traits_t::allocate(alloc_, capacity_) } {
     for(size_type i {0}; i < size_; ++i) {
         traits_t::construct(alloc_, array_ + i, value);
     }
 }
 
 template<class T, class Allocator>
-VectorClass<T, Allocator>::VectorClass(const VectorClass& other): size_ {other.size_}, capacity_{other.capacity_}, array_ {traits_t::allocate(alloc_, capacity_)} {
+VectorClass<T, Allocator>::VectorClass(const VectorClass& other): size_ {other.size_}, capacity_{other.capacity_}, alloc_{traits_t::select_on_container_copy_construction(other.get_allocator())}, array_ {traits_t::allocate(alloc_, capacity_)} {
     for(size_type i {0}; i < size_; ++i) {
         traits_t::construct(alloc_, array_ + i, other[i]);
     }
 }
 
 template<class T, class Allocator>
-VectorClass<T, Allocator>::VectorClass(VectorClass&& other): size_ { other.size_ }, capacity_ {other.capacity_}, array_ {other.array_} {
+VectorClass<T, Allocator>::VectorClass(const VectorClass& other, const Allocator& alloc): size_ {other.size_}, capacity_{other.capacity_}, alloc_{alloc}, array_ {traits_t::allocate(alloc_, capacity_)} {
+    for(size_type i {0}; i < size_; ++i) {
+        traits_t::construct(alloc_, array_ + i, other[i]);
+    }
+}
+
+template<class T, class Allocator>
+VectorClass<T, Allocator>::VectorClass(VectorClass&& other): size_ { other.size_ }, capacity_ {other.capacity_}, alloc_ {std::move(other.alloc_)}, array_ {other.array_} {
     other.array_ = nullptr;
     other.size_ = 0;
     other.capacity_ = 0;
+}
+
+template<class T, class Allocator>
+template<class InputIt>
+requires is_it<InputIt>
+VectorClass<T, Allocator>::VectorClass(InputIt first, InputIt last, const Allocator& alloc): size_{static_cast<size_type>(std::distance(first, last))}, capacity_ {size_}, alloc_ {alloc}, array_ {traits_t::allocate(alloc_, capacity_)} {
+    int i {0};
+    for(InputIt it{first}; it != last; ++it) {
+        traits_t::construct(alloc_, array_ + i, *it);
+        ++i;
+    }
 }
 
 template<class T, class Allocator>
@@ -143,7 +178,7 @@ VectorClass<T, Allocator>::~VectorClass() {
 }
 
 template<class T, class Allocator>
-VectorClass<T, Allocator>::VectorClass(std::initializer_list<T> l): capacity_ {l.size() * 2}, size_ { l.size()}, array_ { traits_t::allocate(alloc_, capacity_)} {
+VectorClass<T, Allocator>::VectorClass(std::initializer_list<T> l, const Allocator& alloc): capacity_ {l.size()}, size_ { l.size()}, alloc_ {alloc}, array_ { traits_t::allocate(alloc_, capacity_)} {
     size_type counter {0};
     for(auto& element: l) {
         traits_t::construct(alloc_, array_ + counter, element);
@@ -251,7 +286,7 @@ void VectorClass<T, Allocator>::reserve(size_type new_cap) {
     if(new_cap <= capacity_) return;
     pointer new_arr  {traits_t::allocate(alloc_, new_cap)};
     for (size_type i {0}; i < size_; ++i) {
-        traits_t::construct(alloc_, new_arr + i, array_[i]);
+        traits_t::construct(alloc_, new_arr + i, std::move(array_[i]));
     }
     destroyAndDealloc();
     capacity_ = new_cap;
@@ -260,42 +295,33 @@ void VectorClass<T, Allocator>::reserve(size_type new_cap) {
 }
 
 template<class T, class Allocator>
+void VectorClass<T, Allocator>::shrink_to_fit() {
+    if(size_ == capacity_) return;
+    pointer new_arr {traits_t::allocate(alloc_, size_)};
+    for(size_type i{0}; i < size_; ++i) 
+        traits_t::construct(alloc_, new_arr + i, std::move(array_[i]));
+    
+    destroyAndDealloc();
+    capacity_ = size_;
+    array_ = new_arr;
+    new_arr = nullptr;
+
+}
+
+
+template<class T, class Allocator>
 constexpr VectorClass<T, Allocator>::size_type VectorClass<T, Allocator>::capacity() const noexcept {
     return capacity_;
 }
 
 template<class T, class Allocator>
 constexpr void VectorClass<T, Allocator>::push_back(const T& value) {
-    if((size_ + 1) > capacity_) {
-        size_type new_cap {capacity_ == 0 ? 1 : capacity_ * 2};
-        pointer new_arr {traits_t::allocate(alloc_, new_cap)};
-        for (size_type i {0}; i < size_; ++i) {
-            traits_t::construct(alloc_, new_arr + i, std::move(array_[i]));
-        }
-        destroyAndDealloc();
-        capacity_ = new_cap;
-        array_ = new_arr;
-        new_arr = nullptr;
-    }
-    traits_t::construct(alloc_, array_ + (size_++), value);
+    append(value);
 }
 
 template<class T, class Allocator>
 constexpr void VectorClass<T, Allocator>::push_back(T&& value) {
-    if((size_ + 1) > capacity_) {
-        size_type new_cap {capacity_ == 0 ? 1 : capacity_ * 2};
-        pointer new_arr {traits_t::allocate(alloc_, new_cap)};
-        for (size_type i {0}; i < size_; ++i) {
-            traits_t::construct(alloc_, new_arr + i, std::move(array_[i]));
-        }
-        destroyAndDealloc();
-        capacity_ = new_cap;
-        array_ = new_arr;
-        new_arr = nullptr;
-    }
-    // Increment after inserting because next free element is
-    // size_ not ++size_
-    traits_t::construct(alloc_, array_ + (size_++), value);
+    append(std::move(value));
 }
 
 template<class T, class Allocator>
@@ -310,7 +336,7 @@ void VectorClass<T, Allocator>::insert(const_iterator pos,const T& value) {
     if(!((pos >= begin()) and (pos <= end()))) {
         throw std::out_of_range("Iterator is out of bounds!");
     }
-    size_type new_capacity {(size_ + 1>capacity_)?capacity_: capacity_* 2, capacity_};
+    size_type new_capacity {(size_ == capacity_)?capacity_: capacity_* 2, capacity_};
     pointer new_arr {traits_t::allocate(alloc_, new_capacity)};
     ++size_;
     size_type start = std::distance(cbegin(), pos);
@@ -334,7 +360,7 @@ void VectorClass<T, Allocator>::insert(const_iterator pos,T&& value) {
     if(!((pos >= begin()) and (pos <= end()))) {
         throw std::out_of_range("Iterator is out of bounds!");
     }
-    size_type new_capacity {(size_ + 1> capacity_)?capacity_ * 2: capacity_};
+    size_type new_capacity {(size_ == capacity_)?capacity_ * 2: capacity_};
     pointer new_arr {traits_t::allocate(alloc_, new_capacity)};
     ++size_;
     size_type start = std::distance(cbegin(), pos);
@@ -377,8 +403,12 @@ void VectorClass<T, Allocator>::insert(const_iterator pos, size_type count, cons
     array_ = new_arr;
     new_arr = nullptr;
 }
+
+
 template<class T, class Allocator>
-void VectorClass<T, Allocator>::insert(const_iterator pos, iterator first, iterator last) {
+template<class InputIt>
+requires is_it<InputIt>
+void VectorClass<T, Allocator>::insert(const_iterator pos, InputIt first, InputIt last) {
     const size_type count = std::distance(first, last);
     if(!((pos >= begin()) and (pos <= end()))) {
         throw std::out_of_range("Iterator is out of bounds!");
@@ -388,7 +418,7 @@ void VectorClass<T, Allocator>::insert(const_iterator pos, iterator first, itera
     size_ += count;
     size_type start = std::distance(cbegin(), pos);
     size_type j {0};
-    iterator iter {first};
+    InputIt iter {first};
     for(size_type i {0}; i < size_; ++i) {
         if(i >= start && i < start + count) {
             traits_t::construct(alloc_, new_arr + i, (*iter));
@@ -402,6 +432,7 @@ void VectorClass<T, Allocator>::insert(const_iterator pos, iterator first, itera
     capacity_ = new_capacity;
     array_ = new_arr;
     new_arr = nullptr;
+
 }
 
 template<class T, class Allocator>
@@ -432,6 +463,19 @@ void VectorClass<T, Allocator>::insert(const_iterator pos, std::initializer_list
     capacity_ = new_capacity;
     array_ = new_arr;
     new_arr = nullptr;
+}
+
+
+template<class T, class Allocator>
+VectorClass<T, Allocator>::iterator VectorClass<T, Allocator>::erase(const_iterator pos) {
+    if(!((pos >= begin()) and (pos <= end()))) {
+        throw std::out_of_range("Iterator is out of bounds!");
+    }
+    iterator it = begin() + (pos - begin());
+    traits_t::destroy(alloc_, it);
+    std::copy(it + 1, end(), it);
+    --size_;
+    return it; 
 }
 
 template<class T, class Allocator>
@@ -506,11 +550,29 @@ VectorClass<T, Allocator>::reference VectorClass<T, Allocator>::at(const size_ty
     return array_[index];
 }
 
+
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::allocator VectorClass<T, Allocator>::get_allocator() const noexcept {
+    return alloc_;
+}
+
 template<class T, class Allocator>
 VectorClass<T, Allocator>::const_reference VectorClass<T, Allocator>::at(const size_type index) const {
     if(!(index < size_))
         throw std::out_of_range("Index out of range");
     return array_[index];
+}
+
+template<class T, class Allocator>
+template<class Type>
+void VectorClass<T, Allocator>::append(Type&& val) {
+    if(size_ == capacity_) {
+        size_type new_cap {capacity_ == 0 ? 1 : capacity_ * 2};
+        reserve(capacity_ == 0 ? 1 : capacity_ * 2);
+    }
+    // Increment after inserting because next free element is
+    // size_ not ++size_
+    traits_t::construct(alloc_, array_ + (size_++), std::forward<Type>(val));
 }
 
 #endif // VECTORCLASS_HPP
