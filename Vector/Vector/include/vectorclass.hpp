@@ -106,6 +106,7 @@ public:
     reference at(const size_type index);
     const_reference at(const size_type index) const;
 
+    // Get allocator
     constexpr allocator get_allocator() const noexcept;
 
 private:
