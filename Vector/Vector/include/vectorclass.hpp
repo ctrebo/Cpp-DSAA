@@ -71,6 +71,7 @@ public:
     constexpr size_type capacity() const noexcept;
     void reserve(size_type new_cap);
     void shrink_to_fit();
+    void resize(size_type count, const value_type& value=T{});
 
     // Modifiers
     constexpr void push_back(const T& value);
@@ -309,6 +310,20 @@ void VectorClass<T, Allocator>::shrink_to_fit() {
 
 }
 
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::resize(size_type count, const value_type& value) {
+    size_type old_size {size_};
+    if(count <= capacity_) {
+        size_ = count; 
+    } else {
+        reserve(count < capacity_ * 2 ? capacity_ * 2: count);
+        size_ = count;
+    }
+    for(size_type i {old_size}; i < size_; ++i) {
+        traits_t::construct(alloc_, array_ + i, value);
+    }
+
+}
 
 template<class T, class Allocator>
 constexpr VectorClass<T, Allocator>::size_type VectorClass<T, Allocator>::capacity() const noexcept {
