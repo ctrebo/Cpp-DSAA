@@ -1,14 +1,18 @@
 #include "vectorclass.hpp"
+#include "custom_matchers.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_predicate.hpp>
 #include <catch2/matchers/catch_matchers_templated.hpp>
+#include <catch2/generators/catch_generators.hpp>
 #include <cstddef>
 #include <algorithm>
 #include <functional>
+#include <initializer_list>
+#include <array>
+#include <utility>
 
 using size_type = VectorClass<int>::size_type;
-
-
 
 // Every test in this TESTCASE will be required because
 // ctors are the base of the class. If they do not work, nothing will.
@@ -16,28 +20,90 @@ using size_type = VectorClass<int>::size_type;
 // be a common starting point.
 
 TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
-   SECTION("Default ctor construct size and capacity to 0. No memory allocation happens") {
+
+    // VectorClass() = default;
+    SECTION("Default ctor construct size and capacity to 0. No memory allocation happens") {
         VectorClass<int> v;
         REQUIRE(v.size() == 0);
         REQUIRE(v.capacity() == 0);
         // If array hasny been allocated it 'bool(v.data())' is false
         REQUIRE_FALSE(bool(v.data()));
-        
-   }
 
-   SECTION("Ctor that takes number constructs size and capacity to number and allocates memory") {
-       size_type count {5};
-       int value {1};
-       VectorClass<int> v(count, 1);
+    }
+
+    //VectorClass(size_type size, const T& value=T{}, const Allocator& alloc = Allocator());
+    SECTION("Ctor constructs size and capacity to given number and array with default values") {
+        size_type count {5};
+        VectorClass<int> v(count);
 
         REQUIRE(v.size() == count);
         REQUIRE(v.capacity() == count);
-        // If array hasny been allocated it 'bool(v.data())' is false
+        // If array hasnt been allocated, 'bool(v.data())' is false
         REQUIRE(bool(v.data()));
-        std::vector<int> v1(count, 1);
-        SECTION("Vector got constructed with the right value") {
+
+        SECTION("Vector got constructed with the right values") {
+            REQUIRE_THAT(v, EqualsValueMatcher(0));
         }
-   }
+    }
+
+    //VectorClass(size_type size, const T& value=T{}, const Allocator& alloc = Allocator());
+    SECTION("Ctor constructs size and capacity to given number, and constructs array with given value") {
+        size_type count {5};
+        int value {1};
+        VectorClass<int> v(count, 1);
+
+        REQUIRE(v.size() == count);
+        REQUIRE(v.capacity() == count);
+        // If array hasnt been allocated, 'bool(v.data())' is false
+        REQUIRE(bool(v.data()));
+        SECTION("Vector got constructed with the right values") {
+            REQUIRE_THAT(v, EqualsValueMatcher(value));
+        }
+    }
+    
+    //VectorClass(std::initializer_list<T> l, const Allocator& alloc = Allocator());
+    SECTION("Ctor constructs size and capacity to size of initializer list") {
+        std::initializer_list<int> initL {1, 2, 3, 4, 5};
+        VectorClass<int> v {initL};
+
+        REQUIRE(v.size() == initL.size());
+        REQUIRE(v.capacity() == initL.size());
+        REQUIRE_THAT(v, EqualsContainer(initL));
+    }
+
+    //VectorClass(const VectorClass& other);
+    SECTION("Copy ctor copys size and capacity from other vector. Values get deep copied") {
+        VectorClass<int> v1{1, 2, 3 ,4 , 5};
+        VectorClass<int> v2{v1};
+
+        REQUIRE(v2.capacity() == v1.capacity());
+        REQUIRE_THAT(v2, EqualsContainer(v1));
+    }
+
+    //VectorClass(const VectorClass&& other);
+    SECTION("Move ctor moves size, capacity and array from one vector to another") {
+        VectorClass<int> v1 {1, 2, 3, 4, 5};
+        // Use another Vector v3 because v1 should be empty after move
+        VectorClass<int> v3{v1};
+        VectorClass<int> v2{std::move(v1)};
+
+        REQUIRE(v2.capacity() == v3.capacity());
+        REQUIRE_THAT(v2, EqualsContainer(v3));
+
+        REQUIRE(v1.size() == 0);
+        REQUIRE(v1.capacity() == 0);
+        REQUIRE_FALSE(bool(v1.data()));
+    }
+    
+    //VectorClass(InputIt first, InputIt last, const Allocator& alloc = Allocator());
+    SECTION("Ctor constructs size and capacity to range between first and last. Elements get deep copied") {
+        VectorClass<int> v1 {1, 2, 3, 4, 5};
+        VectorClass<int> v2{v1.cbegin(), v1.cend()};
+
+        REQUIRE(v2.capacity() == v1.capacity());
+        REQUIRE_THAT(v2, EqualsContainer(v1));
+    }
+
 
 }
 

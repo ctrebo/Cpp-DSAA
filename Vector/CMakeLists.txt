@@ -20,6 +20,12 @@ if(Catch2_FOUND)
     target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 endif()
 
+find_package(fmt REQUIRED)
+if(fmt_FOUND)
+    include_directories( ${fmt_INCLUDE_DIRS} )
+    target_link_libraries( tests PRIVATE fmt::fmt )
+endif()
+
 target_link_libraries(Main PUBLIC VectorClass)
 target_link_libraries(tests PUBLIC VectorClass)
 
