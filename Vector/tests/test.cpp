@@ -103,8 +103,40 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
         REQUIRE(v2.capacity() == v1.capacity());
         REQUIRE_THAT(v2, EqualsContainer(v1));
     }
+}
 
+TEST_CASE("Test own implemented vectors 'operator=' functions") {
+    VectorClass<int> v1;
+    VectorClass<int> v2 {1, 2, 3, 4, 5};
 
+    //VectorClass<T, Allocator>& operator=(const VectorClass& other);
+    SECTION("Copys size and capacity of 'other' and deep copies the values") {
+       v1 = v2; 
+       CHECK(v1.capacity() == v2.capacity());
+       // EqualsContainer checks for same size too!
+       CHECK_THAT(v1, EqualsContainer(v2));
+    }
+
+    //VectorClass<T, Allocator>& operator=(VectorClass&& other);
+    SECTION("Moves size and capacity of 'other' and takes ownership of array of 'other'") {
+        // Use third vector because v2 should be empty after move assignment
+        VectorClass<int> v3 {v2};
+        v1 = std::move(v2);
+        CHECK(v1.capacity() == v3.capacity());
+        CHECK_THAT(v1, EqualsContainer(v3));
+
+        CHECK(v2.size() == 0);
+        CHECK(v2.capacity() == 0);
+        REQUIRE_FALSE(bool(v2.data()));
+    }
+
+    //VectorClass<T, Allocator>& operator=(std::initializer_list<T> l);
+    SECTION("Assigns size of l to capacity and size of vector. Elements get deep copied") {
+        std::initializer_list<int> iList {1, 2, 3, 4, 5};
+        v1 = iList;
+        CHECK(v1.capacity() == iList.size());
+        CHECK_THAT(v1, EqualsContainer(iList));
+    }
 }
 
 TEST_CASE("Test own implemented vectors length and capacity functions", "[VectorClass]") {

@@ -224,7 +224,7 @@ template<class T, class Allocator>
 VectorClass<T, Allocator>& VectorClass<T, Allocator>::operator=(std::initializer_list<T> l) {
     destroyAndDealloc();
     size_ = l.size();
-    capacity_ = size_ * 2;
+    capacity_ = size_;
     array_ = traits_t::allocate(alloc_, capacity_);
 
     size_type counter {0};
