@@ -62,7 +62,9 @@ public:
 
     // Assign
     void assign(size_type count, const T& value);
-    void assign(iterator first, iterator last);
+    template<class InputIt>
+    requires is_it<InputIt>
+    void assign(InputIt first, InputIt last);
     void assign(std::initializer_list<T> l);
 
     // Length and capacity
@@ -240,7 +242,7 @@ template<class T, class Allocator>
 void VectorClass<T, Allocator>::assign(size_type count, const T& value) {
     destroyAndDealloc();
     size_ = count;
-    capacity_ = size_ * 2;
+    capacity_ = size_;
     array_ = traits_t::allocate(alloc_, capacity_);
     for(size_type i {0}; i < size_; ++i) {
         traits_t::construct(alloc_, array_ + i, value);
@@ -248,10 +250,12 @@ void VectorClass<T, Allocator>::assign(size_type count, const T& value) {
 }
 
 template<class T, class Allocator>
-void VectorClass<T, Allocator>::assign(iterator first, iterator last) {
+template<class InputIt>
+requires is_it<InputIt>
+void VectorClass<T, Allocator>::assign(InputIt first, InputIt last) {
     destroyAndDealloc();
     size_ = std::distance(first, last);
-    capacity_ = size_ * 2;
+    capacity_ = size_;
     array_ = traits_t::allocate(alloc_, capacity_);
     size_type counter {0};
     for(auto i {first}; i != last; ++i) {
@@ -264,7 +268,7 @@ template<class T, class Allocator>
 void VectorClass<T, Allocator>::assign(std::initializer_list<T> l) {
     destroyAndDealloc();
     size_ = l.size();
-    capacity_ = size_ * 2;
+    capacity_ = size_;
     array_ = traits_t::allocate(alloc_, capacity_);
     size_type counter {0};
     for(auto& element: l) {

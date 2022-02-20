@@ -42,7 +42,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
         REQUIRE(bool(v.data()));
 
         SECTION("Vector got constructed with the right values") {
-            REQUIRE_THAT(v, EqualsValueMatcher(0));
+            REQUIRE_THAT(v, EqualsVal(0));
         }
     }
 
@@ -57,7 +57,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
         // If array hasnt been allocated, 'bool(v.data())' is false
         REQUIRE(bool(v.data()));
         SECTION("Vector got constructed with the right values") {
-            REQUIRE_THAT(v, EqualsValueMatcher(value));
+            REQUIRE_THAT(v, EqualsVal(value));
         }
     }
     
@@ -135,6 +135,44 @@ TEST_CASE("Test own implemented vectors 'operator=' functions") {
         std::initializer_list<int> iList {1, 2, 3, 4, 5};
         v1 = iList;
         CHECK(v1.capacity() == iList.size());
+       // EqualsContainer checks for same size too!
+        CHECK_THAT(v1, EqualsContainer(iList));
+    }
+}
+
+TEST_CASE("Test own implemented vectors assignment functions") {
+    VectorClass<int> v1;
+
+    //void assign(size_type count, const T& value);
+    SECTION("Reserves space for 'count' elements and copys 'value' into each spot") {
+        size_type count {5};
+        int val {3};
+        v1.assign(count, val);
+
+       CHECK(v1.size() == count);
+       CHECK(v1.capacity() == count);
+
+       CHECK_THAT(v1, EqualsVal(val));
+    }
+
+    //template<class InputIt>
+    //void assign(InputIt first, InputIt last);
+    SECTION("Reserves space for'std::distance(first, last) values deep copies the values'") {
+        VectorClass<int> v2 {1, 2, 3, 4, 5};
+        v1.assign(v2.cbegin(), v2.cend());
+
+        CHECK(v1.capacity() == v2.size());
+        // EqualsContainer checks for same size too!
+        CHECK_THAT(v1, EqualsContainer(v2));
+    }
+
+    //void assign(std::initializer_list<T> l);
+    SECTION("Reserves space for'std::distance(first, last) values deep copies the values'") {
+        std::initializer_list<int> iList{1, 2, 3, 4, 5};
+        v1.assign(iList);
+
+        CHECK(v1.capacity() == iList.size());
+        // EqualsContainer checks for same size too!
         CHECK_THAT(v1, EqualsContainer(iList));
     }
 }

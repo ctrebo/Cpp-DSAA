@@ -25,8 +25,8 @@ private:
 };
 
 template<typename T>
-auto EqualsVal(const T& container) -> EqualsValueMatcher<T> {
-    return EqualsValueMatcher<T>{container};
+auto EqualsVal(const T& val) -> EqualsValueMatcher<T> {
+    return EqualsValueMatcher<T>{val};
 }
 
 template<typename T>
