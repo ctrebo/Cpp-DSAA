@@ -400,4 +400,52 @@ TEST_CASE("Test own implemented vectors modifier functions") {
     }
 }
 
+TEST_CASE("Test own implemented vectors begin, end and rend functions") {
+    
+    VectorClass<int> v {1, 2, 3, 4, 5};
+    const VectorClass<int> const_v {1, 2, 3, 4, 5};
+    auto begin_const_it = const_v.begin();
+    auto end_it = v.end();
+    auto end_const_it = const_v.end();
 
+
+    //constexpr iterator VectorClass<T, Allocator>::begin() noexcept;
+    SECTION("Returns iterator to first element of vector") {
+        auto begin_it = v.begin();
+        CHECK(&(v[0]) == begin_it);
+        ++begin_it;
+        CHECK(&(v[1]) == begin_it);
+    }
+
+    //constexpr const_pointer VectorClass<T, Allocator>::begin() const noexcept;
+    SECTION("Returns const iterator to first element of vector") {
+        auto begin_const_it = const_v.begin();
+        CHECK(&(const_v[0]) == begin_const_it);
+    }
+
+    //constexpr const_pointer VectorClass<T, Allocator>::cbegin() const noexcept;
+    SECTION("Returns const iterator to first element of vector") {
+        auto begin_const_it = const_v.cbegin();
+        CHECK(&(const_v[0]) == begin_const_it);
+    }
+
+    //constexpr iterator VectorClass<T, Allocator>::end() noexcept;
+    SECTION("Returns iterator to last + 1 element of vector") {
+        auto end_it = v.end();
+        CHECK(&(v.back()) + 1 == end_it);
+        --end_it;
+        CHECK(&(v.back()) == end_it);
+    }
+
+    //constexpr const_pointer VectorClass<T, Allocator>::end() const noexcept;
+    SECTION("Returns const iterator to last + 1 element of vector") {
+        auto end_const_it = const_v.end();
+        CHECK(&(const_v.back()) + 1 == end_const_it);
+    }
+
+    //constexpr const_pointer VectorClass<T, Allocator>::cend() const noexcept;
+    SECTION("Returns const iterator to last + 1 element of vector") {
+        auto end_const_it = const_v.cend();
+        CHECK(&(const_v.back()) + 1 == end_const_it);
+    }
+}
