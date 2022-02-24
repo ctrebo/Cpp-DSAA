@@ -11,6 +11,7 @@
 #include <initializer_list>
 #include <array>
 #include <utility>
+#include <exception>
 
 using size_type = VectorClass<int>::size_type;
 
@@ -21,7 +22,7 @@ using size_type = VectorClass<int>::size_type;
 
 TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
 
-    // VectorClass() = default;
+    //VectorClass<T, Allocator>::VectorClass() = default;
     SECTION("Default ctor construct size and capacity to 0. No memory allocation happens") {
         VectorClass<int> v;
         REQUIRE(v.size() == 0);
@@ -31,7 +32,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
 
     }
 
-    //VectorClass(size_type size, const T& value=T{}, const Allocator& alloc = Allocator());
+    //VectorClass<T, Allocator>::VectorClass(size_type size, const T& value=T{}, const Allocator& alloc = Allocator());
     SECTION("Ctor constructs size and capacity to given number and array with default values") {
         size_type count {5};
         VectorClass<int> v(count);
@@ -46,7 +47,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
         }
     }
 
-    //VectorClass(size_type size, const T& value=T{}, const Allocator& alloc = Allocator());
+    //VectorClass<T, Allocator>::VectorClass(size_type size, const T& value=T{}, const Allocator& alloc = Allocator());
     SECTION("Ctor constructs size and capacity to given number, and constructs array with given value") {
         size_type count {5};
         int value {1};
@@ -61,7 +62,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
         }
     }
     
-    //VectorClass(std::initializer_list<T> l, const Allocator& alloc = Allocator());
+    //VectorClass<T, Allocator>::VectorClass(std::initializer_list<T> l, const Allocator& alloc = Allocator());
     SECTION("Ctor constructs size and capacity to size of initializer list") {
         std::initializer_list<int> initL {1, 2, 3, 4, 5};
         VectorClass<int> v {initL};
@@ -71,7 +72,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
         REQUIRE_THAT(v, EqualsContainer(initL));
     }
 
-    //VectorClass(const VectorClass& other);
+    //VectorClass<T, Allocator>::VectorClass(const VectorClass& other);
     SECTION("Copy ctor copys size and capacity from other vector. Values get deep copied") {
         VectorClass<int> v1{1, 2, 3 ,4 , 5};
         VectorClass<int> v2{v1};
@@ -80,7 +81,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
         REQUIRE_THAT(v2, EqualsContainer(v1));
     }
 
-    //VectorClass(const VectorClass&& other);
+    //VectorClass<T, Allocator>::VectorClass(const VectorClass&& other);
     SECTION("Move ctor moves size, capacity and array from one vector to another") {
         VectorClass<int> v1 {1, 2, 3, 4, 5};
         // Use another Vector v3 because v1 should be empty after move
@@ -95,7 +96,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
         REQUIRE_FALSE(bool(v1.data()));
     }
     
-    //VectorClass(InputIt first, InputIt last, const Allocator& alloc = Allocator());
+    //VectorClass<T, Allocator>::VectorClass(InputIt first, InputIt last, const Allocator& alloc = Allocator());
     SECTION("Ctor constructs size and capacity to range between first and last. Elements get deep copied") {
         VectorClass<int> v1 {1, 2, 3, 4, 5};
         VectorClass<int> v2{v1.cbegin(), v1.cend()};
@@ -109,7 +110,7 @@ TEST_CASE("Test own implemented vectors 'operator=' functions") {
     VectorClass<int> v1;
     VectorClass<int> v2 {1, 2, 3, 4, 5};
 
-    //VectorClass<T, Allocator>& operator=(const VectorClass& other);
+    //VectorClass<T, Allocator>& VectorClass<T, Allocator>::operator=(const VectorClass& other);
     SECTION("Copys size and capacity of 'other' and deep copies the values") {
        v1 = v2; 
        CHECK(v1.capacity() == v2.capacity());
@@ -117,7 +118,7 @@ TEST_CASE("Test own implemented vectors 'operator=' functions") {
        CHECK_THAT(v1, EqualsContainer(v2));
     }
 
-    //VectorClass<T, Allocator>& operator=(VectorClass&& other);
+    //VectorClass<T, Allocator>& VectorClass<T, Allocator>::operator=(VectorClass&& other);
     SECTION("Moves size and capacity of 'other' and takes ownership of array of 'other'") {
         // Use third vector because v2 should be empty after move assignment
         VectorClass<int> v3 {v2};
@@ -130,7 +131,7 @@ TEST_CASE("Test own implemented vectors 'operator=' functions") {
         REQUIRE_FALSE(bool(v2.data()));
     }
 
-    //VectorClass<T, Allocator>& operator=(std::initializer_list<T> l);
+    //VectorClass<T, Allocator>& VectorClass<T, Allocator>::operator=(std::initializer_list<T> l);
     SECTION("Assigns size of l to capacity and size of vector. Elements get deep copied") {
         std::initializer_list<int> iList {1, 2, 3, 4, 5};
         v1 = iList;
@@ -143,7 +144,7 @@ TEST_CASE("Test own implemented vectors 'operator=' functions") {
 TEST_CASE("Test own implemented vectors assignment functions") {
     VectorClass<int> v1;
 
-    //void assign(size_type count, const T& value);
+    //void VectorClass<T, Allocator>::assign(size_type count, const T& value);
     SECTION("Reserves space for 'count' elements and copys 'value' into each spot") {
         size_type count {5};
         int val {3};
@@ -156,7 +157,7 @@ TEST_CASE("Test own implemented vectors assignment functions") {
     }
 
     //template<class InputIt>
-    //void assign(InputIt first, InputIt last);
+    //void VectorClass<T, Allocator>::assign(InputIt first, InputIt last);
     SECTION("Reserves space for'std::distance(first, last) values deep copies the values'") {
         VectorClass<int> v2 {1, 2, 3, 4, 5};
         v1.assign(v2.cbegin(), v2.cend());
@@ -166,8 +167,8 @@ TEST_CASE("Test own implemented vectors assignment functions") {
         CHECK_THAT(v1, EqualsContainer(v2));
     }
 
-    //void assign(std::initializer_list<T> l);
-    SECTION("Reserves space for'std::distance(first, last) values deep copies the values'") {
+    //void VectorClass<T, Allocator>::assign(std::initializer_list<T> l);
+    SECTION("Reserves space for size of initializer list, and deep copies values") {
         std::initializer_list<int> iList{1, 2, 3, 4, 5};
         v1.assign(iList);
 
@@ -185,30 +186,35 @@ TEST_CASE("Test own implemented vectors length and capacity functions", "[Vector
     REQUIRE(v.size() == starting_cap);
     REQUIRE(v.capacity() == starting_cap);
 
+    //void VectorClass<T, Allocator>::resize(size_type count, const value_type& value=T{});
     SECTION("Resizing bigger changes size and capacity") {
         v.resize(10);
         CHECK(v.size() == 10);
         CHECK(v.capacity() >= starting_cap);
+
+        SECTION("Resizing smaller changes size but not capacity") {
+            v.resize(0);
+            CHECK(v.size() == 0);
+            CHECK(v.capacity() == 10);
+        }
     }
 
-    SECTION("Resizing smaller changes size but not capacity") {
-        v.resize(0);
-        CHECK(v.size() == 0);
-        CHECK(v.capacity() == starting_cap);
-    }
 
+    //void VectorClass<T, Allocator>::reserve(size_type new_cap);
     SECTION("Reserverving bigger changes capacity but not size") {
         v.reserve(starting_cap + 10);
         CHECK(v.size() == starting_cap);
         CHECK(v.capacity() >= starting_cap);
+
+        SECTION("Reserving down unused capacity does not change capacity or size") {
+            v.reserve( 0 );
+            CHECK(v.size() == starting_cap);
+            CHECK(v.capacity() >= starting_cap);
+        }
     }
 
-    SECTION("Reserving down unused capacity does not change capacity or size") {
-        v.reserve( 0 );
-        CHECK(v.size() == starting_cap);
-        CHECK(v.capacity() == starting_cap);
-    }
 
+    //void VectorClass<T, Allocator>::shrink_to_fit();
     SECTION("Shrinking fit changes unused capacity to length of size") {
         // Get unused capacity
         v.reserve(starting_cap + 10);
@@ -217,6 +223,7 @@ TEST_CASE("Test own implemented vectors length and capacity functions", "[Vector
         CHECK(v.size() == v.capacity());
     }
 
+    //constexpr bool VectorClass<T, Allocator>::empty() const noexcept;
     SECTION("Empty returns false if the vector has not size 0") {
         CHECK_FALSE(v.empty());
 
@@ -226,4 +233,171 @@ TEST_CASE("Test own implemented vectors length and capacity functions", "[Vector
         }
     }
 }
+
+TEST_CASE("Test own implemented element access functions") {
+    int first_element {1};
+    int last_element {5};
+    
+    VectorClass<int> v {first_element, 2, 3, 4, last_element};
+
+    //constexpr reference VectorClass<T, Allocator>::front();
+    SECTION("Returns reference to first element") {
+        CHECK(v.front() == first_element);
+        v.front() = 10;
+        CHECK(v.front() != first_element);
+    }
+
+    //constexpr const_reference VectorClass<T, Allocator>::front() const;
+    SECTION("Returns reference to first element, but that element cannot be changed") {
+        const VectorClass<int> const_v {v};
+        CHECK(const_v.front() == first_element);
+    }
+
+    //constexpr reference VectorClass<T, Allocator>::back();
+    SECTION("Returns reference to last element") {
+        CHECK(v.back() == last_element);
+        v.back() = 10;
+        CHECK(v.back() != last_element);
+    }
+
+    //constexpr const_reference VectorClass<T, Allocator>::back() const;
+    SECTION("Returns reference to last element, but that element cannot be changed") {
+        const VectorClass<int> const_v {v};
+        CHECK(const_v.back() == last_element);
+    }
+
+    //pointer VectorClass<T, Allocator>::data() noexcept;
+    SECTION("Return array of Vectorclass") {
+        CHECK(&v[0] == v.data());
+    }
+
+    //reference VectorClass<T, Allocator>::operator[] (const size_type index);
+    SECTION("Returns reference to element at index 'index'. Function does not check if element is in bounds") {
+        CHECK(v[0] == first_element);
+        CHECK(v[v.size() - 1] == last_element);
+        v[0] = 10;
+        CHECK(v[0] != first_element);
+    }
+
+    //const_reference VectorClass<T, Allocator>::operator[] (const size_type index) const;
+    SECTION("Returns const reference to element at index 'index'. Function does not check if element is in bounds") {
+        CHECK(v[0] == first_element);
+        CHECK(v[v.size() - 1] == last_element);
+    }
+
+    //reference VectorClass<t, Allocator>::at(const size_type index);
+    SECTION("Returns reference to element at index 'index'") {
+        CHECK(v.at(0) == first_element);
+        CHECK(v.at(v.size() - 1) == last_element);
+        v[0] = 10;
+        CHECK(v[0] != first_element);
+
+        SECTION("If index is not in bounds a std::out_of_range error gets thrown") {
+            CHECK_THROWS_AS(v.at(-1), std::out_of_range);
+            CHECK_THROWS_AS(v.at(v.size() + 1), std::out_of_range);
+        }
+    }
+
+    //const_reference VectorClass<t, Allocator>::at(const size_type index) const;
+    SECTION("Returns const reference to element at index 'index'") {
+        const VectorClass<int> const_v{v};
+        CHECK(const_v.at(0) == first_element);
+        CHECK(const_v.at(const_v.size() - 1) == last_element);
+
+        SECTION("If index is not in bounds a std::out_of_range error gets thrown") {
+            CHECK_THROWS_AS(const_v.at(-1), std::out_of_range);
+            CHECK_THROWS_AS(const_v.at(const_v.size() + 1), std::out_of_range);
+        }
+    }
+}
+
+TEST_CASE("Test own implemented vectors modifier functions") {
+    VectorClass<int> v1 {1, 2, 3, 4, 5};
+    size_type old_capacity {v1.capacity()};
+
+    //void VectorClass<T, Allocator>::push_back(const T& value);
+    // The same version exists for r-values. There 'value' gets move constructed
+    SECTION("Inserts element at the end of Vector. If vector is full, more capacity gets reserved") {
+        int value {6};
+        v1.push_back(value);
+        
+        CHECK(v1.back() == value);
+        CHECK(v1.capacity() > old_capacity);
+    }
+
+    //void VectorClass<T, Allocator>::clear();
+    SECTION("Makes the vector empty. Capacity stays the same") {
+        v1.clear();
+
+        CHECK(v1.size() == 0);
+        CHECK(v1.capacity() == old_capacity);
+    }
+
+    //void VectorClass<T, Allocator>::insert(const_iterator pos, const T& value);
+    // Overloaded function with r-value exists. This overloaded
+    // function move constructs element.
+    SECTION("Inserts 'value' at const iterator 'pos'. If size of vector equals capacity of vector before the insert more capacity gets reserved") {
+        int val{5};
+        v1.insert(v1.cbegin(), val);
+        CHECK(v1.front() == val);
+        CHECK(v1.capacity() > old_capacity);
+
+        SECTION("If the iterator 'pos' is not inside 'cbegin()' and 'cend' std::out_of_range gets thrown") {
+            CHECK_THROWS_AS(v1.insert(v1.cend() + 1, val), std::out_of_range);
+            CHECK_THROWS_AS(v1.insert(v1.begin() - 1, val), std::out_of_range);
+        }
+    }
+
+    //void VectorClass<T, Allocator>::insert(const_iterator pos, size_type count, const T& value);
+    SECTION("Inserts 'count' values of 'value' at position 'pos'") {
+        int val{5};
+        size_type count {5};
+        v1.insert(v1.cbegin(), count, val);
+        VectorClass<int> v2 {v1.cbegin(), v1.cbegin() + 5};
+        CHECK_THAT(v2, EqualsVal(val));
+        CHECK(v1.capacity() > old_capacity);
+
+        SECTION("If the iterator 'pos' is not inside 'cbegin()' and 'cend' std::out_of_range gets thrown") {
+            CHECK_THROWS_AS(v1.insert(v1.cend() + 1,count, val), std::out_of_range);
+            CHECK_THROWS_AS(v1.insert(v1.begin() - 1,count,  val), std::out_of_range);
+        }
+
+    }
+    //void VectorClass<T, Allocator>::insert(const_iterator pos, InputIt first, InputIt last);
+    SECTION("Inserts values between 'first' and 'last' at position 'pos'") {
+        VectorClass<int> v2 {5, 4, 3, 2, 1};
+        v1.insert(v1.cend(), v2.cbegin(), v2.cend());
+
+        CHECK(v1.capacity() > old_capacity);
+        CHECK_THAT(VectorClass<int>(v1.cend() - 5, v1.cend()), EqualsContainer(v2));
+
+        SECTION("If the iterator 'pos' is not inside 'cbegin()' and 'cend' std::out_of_range gets thrown") {
+            CHECK_THROWS_AS(v1.insert(v1.cend() + 1, v2.cbegin(), v2.cend()), std::out_of_range);
+            CHECK_THROWS_AS(v1.insert(v1.begin() - 1, v2.cbegin(), v2.cend()), std::out_of_range);
+        }
+    }
+
+    //void VectorClass<T, Allocator>::insert(const_iterator pos, std::initializer_list<T> ilist );
+    SECTION("Inserts values of initializer list at position 'pos'") {
+        std::initializer_list<int> iList {1, 2, 3, 4, 5};
+        v1.insert(v1.cbegin(), iList);
+        CHECK(v1.capacity() > old_capacity);
+        CHECK_THAT(VectorClass<int>(v1.cbegin(), v1.cbegin() + iList.size()), EqualsContainer(iList));
+
+        SECTION("If the iterator 'pos' is not inside 'cbegin()' and 'cend' std::out_of_range gets thrown") {
+            CHECK_THROWS_AS(v1.insert(v1.cbegin() -1, iList), std::out_of_range);
+            CHECK_THROWS_AS(v1.insert(v1.cend() + 1, iList), std::out_of_range);
+        }
+    }
+
+    //iterator VectorClass<T, Allocator>::erase(const_iterator pos);
+    SECTION("Removes element from position 'pos'") {
+       int second_element {v1[1]};
+       v1.erase(v1.cbegin()); 
+
+       CHECK(v1.capacity() == old_capacity);
+       CHECK(v1.front() == second_element);
+    }
+}
+
 

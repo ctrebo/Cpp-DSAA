@@ -1,8 +1,11 @@
 #ifndef OWN_CUSTOM_MATCHERS
 #define OWN_CUSTOM_MATCHERS
 
+#include "vectorclass.hpp"
 #include <catch2/matchers/catch_matchers_templated.hpp>
 #include <fmt/core.h>
+
+
 
 template<typename T>
 struct EqualsValueMatcher : Catch::Matchers::MatcherGenericBase {

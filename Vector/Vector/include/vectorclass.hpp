@@ -76,9 +76,9 @@ public:
     void resize(size_type count, const value_type& value=T{});
 
     // Modifiers
-    constexpr void push_back(const T& value);
+    void push_back(const T& value);
     // T&& is r-value reference because no type deduction takes place
-    constexpr void push_back(T&& value);
+    void push_back(T&& value);
     void clear();
     void insert(const_iterator pos, const T& value);
     void insert(const_iterator pos, T&& value);
@@ -86,7 +86,7 @@ public:
     template<class InputIt>
     requires is_it<InputIt> 
     void insert(const_iterator pos, InputIt first, InputIt last);
-    void insert( const_iterator pos, std::initializer_list<T> ilist );
+    void insert(const_iterator pos, std::initializer_list<T> ilist );
     iterator erase(const_iterator pos);
 
 
@@ -335,12 +335,12 @@ constexpr VectorClass<T, Allocator>::size_type VectorClass<T, Allocator>::capaci
 }
 
 template<class T, class Allocator>
-constexpr void VectorClass<T, Allocator>::push_back(const T& value) {
+void VectorClass<T, Allocator>::push_back(const T& value) {
     append(value);
 }
 
 template<class T, class Allocator>
-constexpr void VectorClass<T, Allocator>::push_back(T&& value) {
+void VectorClass<T, Allocator>::push_back(T&& value) {
     append(std::move(value));
 }
 
@@ -356,7 +356,7 @@ void VectorClass<T, Allocator>::insert(const_iterator pos,const T& value) {
     if(!((pos >= begin()) and (pos <= end()))) {
         throw std::out_of_range("Iterator is out of bounds!");
     }
-    size_type new_capacity {(size_ == capacity_)?capacity_: capacity_* 2, capacity_};
+    size_type new_capacity {(size_ == capacity_)? capacity_* 2: capacity_};
     pointer new_arr {traits_t::allocate(alloc_, new_capacity)};
     ++size_;
     size_type start = std::distance(cbegin(), pos);
@@ -491,7 +491,7 @@ VectorClass<T, Allocator>::iterator VectorClass<T, Allocator>::erase(const_itera
     if(!((pos >= begin()) and (pos <= end()))) {
         throw std::out_of_range("Iterator is out of bounds!");
     }
-    iterator it = begin() + (pos - begin());
+    iterator it = begin() + std::distance(cbegin(), pos);
     traits_t::destroy(alloc_, it);
     std::copy(it + 1, end(), it);
     --size_;
