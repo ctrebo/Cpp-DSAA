@@ -92,11 +92,18 @@ public:
 
     // Pointers to first and last element
     constexpr iterator begin() noexcept;
-    constexpr const_pointer begin() const noexcept;
+    constexpr const_iterator begin() const noexcept;
     constexpr const_pointer cbegin() const noexcept;
     constexpr iterator end() noexcept;
-    constexpr const_pointer end() const noexcept;
-    constexpr const_pointer cend() const noexcept;
+    constexpr const_iterator end() const noexcept;
+    constexpr const_iterator cend() const noexcept;
+
+    constexpr reverse_iterator rbegin() noexcept;
+    constexpr const_reverse_iterator rbegin() const noexcept;
+    constexpr const_reverse_iterator crbegin() const noexcept;
+    constexpr reverse_iterator rend() noexcept;
+    constexpr const_reverse_iterator rend() const noexcept;
+    constexpr const_reverse_iterator crend() const noexcept;
 
     // Element access
     constexpr reference front();
@@ -104,6 +111,7 @@ public:
     constexpr reference back();
     constexpr const_reference back() const;
     pointer data() noexcept;
+    const_pointer data() const noexcept;
     reference operator[] (const size_type index);
     const_reference operator[] (const size_type index) const;
     reference at(const size_type index);
@@ -504,28 +512,58 @@ constexpr VectorClass<T, Allocator>::iterator VectorClass<T, Allocator>::begin()
 }
 
 template<class T, class Allocator>
-constexpr VectorClass<T, Allocator>::const_pointer VectorClass<T, Allocator>::begin() const noexcept {
+constexpr VectorClass<T, Allocator>::const_iterator VectorClass<T, Allocator>::begin() const noexcept {
     return array_;
 }
 
 template<class T, class Allocator>
-constexpr VectorClass<T, Allocator>::const_pointer VectorClass<T, Allocator>::cbegin() const noexcept {
+constexpr VectorClass<T, Allocator>::const_iterator VectorClass<T, Allocator>::cbegin() const noexcept {
     return array_;
 }
 
 template<class T, class Allocator>
 constexpr VectorClass<T, Allocator>::iterator VectorClass<T, Allocator>::end() noexcept {
-    return &(array_[size_]);
+    return array_ + size_;
 }
 
 template<class T, class Allocator>
-constexpr VectorClass<T, Allocator>::const_pointer VectorClass<T, Allocator>::end() const noexcept {
-    return &(array_[size_]);
+constexpr VectorClass<T, Allocator>::const_iterator VectorClass<T, Allocator>::end() const noexcept {
+    return array_ + size_;
 }
 
 template<class T, class Allocator>
-constexpr VectorClass<T, Allocator>::const_pointer VectorClass<T, Allocator>::cend() const noexcept {
-    return &(array_[size_]);
+constexpr VectorClass<T, Allocator>::const_iterator VectorClass<T, Allocator>::cend() const noexcept {
+    return array_ + size_;
+}
+
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::reverse_iterator VectorClass<T, Allocator>::rbegin() noexcept {
+    return reverse_iterator(array_ + size_);
+}
+
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::const_reverse_iterator VectorClass<T, Allocator>::rbegin() const noexcept {
+    return reverse_iterator(array_ + size_);
+}
+
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::const_reverse_iterator VectorClass<T, Allocator>::crbegin() const noexcept {
+    return reverse_iterator(array_ + size_);
+}
+
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::reverse_iterator VectorClass<T, Allocator>::rend() noexcept {
+    return reverse_iterator(array_);
+}
+
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::const_reverse_iterator VectorClass<T, Allocator>::rend() const noexcept {
+    return reverse_iterator(array_);
+}
+
+template<class T, class Allocator>
+constexpr VectorClass<T, Allocator>::const_reverse_iterator VectorClass<T, Allocator>::crend() const noexcept {
+    return reverse_iterator(array_);
 }
 
 template<class T, class Allocator>
@@ -550,6 +588,11 @@ constexpr VectorClass<T, Allocator>::const_reference VectorClass<T, Allocator>::
 
 template<class T, class Allocator>
 VectorClass<T, Allocator>::pointer VectorClass<T, Allocator>::data() noexcept {
+    return array_;
+}
+
+template<class T, class Allocator>
+VectorClass<T, Allocator>::const_pointer VectorClass<T, Allocator>::data() const noexcept {
     return array_;
 }
 

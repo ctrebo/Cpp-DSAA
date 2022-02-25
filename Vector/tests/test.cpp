@@ -12,6 +12,7 @@
 #include <array>
 #include <utility>
 #include <exception>
+#include <iterator>
 
 using size_type = VectorClass<int>::size_type;
 
@@ -417,13 +418,13 @@ TEST_CASE("Test own implemented vectors begin, end and rend functions") {
         CHECK(&(v[1]) == begin_it);
     }
 
-    //constexpr const_pointer VectorClass<T, Allocator>::begin() const noexcept;
+    //constexpr const_iterator VectorClass<T, Allocator>::begin() const noexcept;
     SECTION("Returns const iterator to first element of vector") {
         auto begin_const_it = const_v.begin();
         CHECK(&(const_v[0]) == begin_const_it);
     }
 
-    //constexpr const_pointer VectorClass<T, Allocator>::cbegin() const noexcept;
+    //constexpr const_iterator VectorClass<T, Allocator>::cbegin() const noexcept;
     SECTION("Returns const iterator to first element of vector") {
         auto begin_const_it = const_v.cbegin();
         CHECK(&(const_v[0]) == begin_const_it);
@@ -437,15 +438,55 @@ TEST_CASE("Test own implemented vectors begin, end and rend functions") {
         CHECK(&(v.back()) == end_it);
     }
 
-    //constexpr const_pointer VectorClass<T, Allocator>::end() const noexcept;
+    //constexpr const_iterator VectorClass<T, Allocator>::end() const noexcept;
     SECTION("Returns const iterator to last + 1 element of vector") {
         auto end_const_it = const_v.end();
         CHECK(&(const_v.back()) + 1 == end_const_it);
     }
 
-    //constexpr const_pointer VectorClass<T, Allocator>::cend() const noexcept;
+    //constexpr const_iterator VectorClass<T, Allocator>::cend() const noexcept;
     SECTION("Returns const iterator to last + 1 element of vector") {
         auto end_const_it = const_v.cend();
         CHECK(&(const_v.back()) + 1 == end_const_it);
+    }
+
+    //constexpr reverse_iterator VectorClass<T, Allocator>::rbegin() noexcept;
+    SECTION("Returns reverse iterator to last + 1 element of vector") {
+        auto end_it = v.rbegin();
+        CHECK(static_cast<std::reverse_iterator<int*>>(&(v.back()) + 1) == end_it);
+        ++end_it;
+        CHECK(static_cast<std::reverse_iterator<int*>>(&(v.back())) == end_it);
+    }
+
+    //constexpr const_reverse_iterator VectorClass<T, Allocator>::rbegin() const noexcept;
+    SECTION("Returns const reverse iterator to last + 1 element of vector") {
+        auto end_it = const_v.rbegin();
+        CHECK(static_cast<std::reverse_iterator<const int*>>(&(const_v.back()) + 1) == end_it);
+    }
+
+    //constexpr const_reverse_iterator VectorClass<T, Allocator>::rbegin() const noexcept;
+    SECTION("Returns const reverse iterator to last + 1 element of vector") {
+        auto end_it = v.crbegin();
+        CHECK(static_cast<std::reverse_iterator<int*>>(&(v.back()) + 1) == end_it);
+    }
+    
+    //constexpr reverse_iterator VectorClass<T, Allocator>::rend() noexcept;
+    SECTION("Returns reverse iterator to first element of vector") {
+        auto begin_it = v.rend();
+        CHECK(static_cast<std::reverse_iterator<int*>>(v.data()) == begin_it);
+        --begin_it;
+        CHECK(static_cast<std::reverse_iterator<int*>>(v.data() + 1) == begin_it);
+    }
+
+    //constexpr const_reverse_iterator VectorClass<T, Allocator>::rend() const noexcept;
+    SECTION("Returns reverse iterator to first element of vector") {
+        auto begin_it = const_v.rend();
+        CHECK(static_cast<std::reverse_iterator<const int*>>(const_v.data()) == begin_it);
+    }
+
+    //constexpr const_reverse_iterator VectorClass<T, Allocator>::crend() const noexcept;
+    SECTION("Returns reverse iterator to first element of vector") {
+        auto begin_it = const_v.crend();
+        CHECK(static_cast<std::reverse_iterator<const int*>>(const_v.data()) == begin_it);
     }
 }
