@@ -399,16 +399,28 @@ TEST_CASE("Test own implemented vectors modifier functions") {
        CHECK(v1.capacity() == old_capacity);
        CHECK(v1.front() == second_element);
     }
+
+    //void VectorClass<T, Allocator>::pop_back();
+    SECTION("Removes last element of vector") {
+        size_type old_size {v1.size()};
+        v1.pop_back();
+        CHECK(v1.size() == old_size - 1);
+    }
+
+    //void VectorClass<T, Allocator>::swap(VectorClass& other) noexcept;
+    SECTION("Swaps element of 'other' with elements of 'this'") {
+        VectorClass<int> v2 {5, 4, 3, 2, 1};
+        VectorClass<int> v3 {v2};
+        v1.swap(v2);
+        CHECK_THAT(v1, EqualsContainer(v3));
+        CHECK_THAT(v2, !EqualsContainer(v3));
+    }
 }
 
 TEST_CASE("Test own implemented vectors begin, end and rend functions") {
     
     VectorClass<int> v {1, 2, 3, 4, 5};
     const VectorClass<int> const_v {1, 2, 3, 4, 5};
-    auto begin_const_it = const_v.begin();
-    auto end_it = v.end();
-    auto end_const_it = const_v.end();
-
 
     //constexpr iterator VectorClass<T, Allocator>::begin() noexcept;
     SECTION("Returns iterator to first element of vector") {

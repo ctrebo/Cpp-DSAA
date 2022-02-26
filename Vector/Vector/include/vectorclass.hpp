@@ -88,6 +88,8 @@ public:
     void insert(const_iterator pos, InputIt first, InputIt last);
     void insert(const_iterator pos, std::initializer_list<T> ilist );
     iterator erase(const_iterator pos);
+    void pop_back();
+    void swap(VectorClass& other) noexcept;
 
 
     // Pointers to first and last element
@@ -504,6 +506,23 @@ VectorClass<T, Allocator>::iterator VectorClass<T, Allocator>::erase(const_itera
     std::copy(it + 1, end(), it);
     --size_;
     return it; 
+}
+
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::pop_back() {
+    if (size_ == 0) {
+        return;
+    }
+    traits_t::destroy(alloc_, array_ + (--size_));
+}
+
+template<class T, class Allocator>
+void VectorClass<T, Allocator>::swap(VectorClass& other) noexcept {
+    using std::swap;
+    swap(size_, other.size_);
+    swap(capacity_, other.capacity_);
+    swap(array_, other.array_);
+    swap(alloc_, other.alloc_);
 }
 
 template<class T, class Allocator>
