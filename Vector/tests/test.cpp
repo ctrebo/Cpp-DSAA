@@ -326,6 +326,27 @@ TEST_CASE("Test own implemented vectors modifier functions") {
         CHECK(v1.capacity() > old_capacity);
     }
 
+    //template<class Args>
+    //void VectorClass<T, Allocator>::emplace_back(Args&&... args);
+    SECTION("Emplace element at the end of the vector") {
+        int value {6};
+        v1.emplace_back(value);
+
+        CHECK(v1.back() == value);
+        CHECK(v1.capacity() > old_capacity);
+    }
+
+    //template< class... Args >
+    //void emplace(const_iterator pos, Args&&... args) {
+    SECTION("Emplace element at the position 'pos' of the vector") {
+        int value {6};
+        v1.emplace(v1.cbegin(), value);
+
+        CHECK(v1.front() == value);
+        CHECK(v1.capacity() > old_capacity);
+    }
+    
+
     //void VectorClass<T, Allocator>::clear();
     SECTION("Makes the vector empty. Capacity stays the same") {
         v1.clear();

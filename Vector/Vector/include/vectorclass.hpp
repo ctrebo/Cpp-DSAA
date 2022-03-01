@@ -79,6 +79,15 @@ public:
     void push_back(const T& value);
     // T&& is r-value reference because no type deduction takes place
     void push_back(T&& value);
+    template<class... Args>
+    void emplace_back(Args&&... args) {
+        push_back(value_type(std::forward<Args>(args)...));
+    }
+
+    template< class... Args >
+    void emplace(const_iterator pos, Args&&... args) {
+        insert(pos, value_type(std::forward<Args>(args)...));
+    }
     void clear();
     void insert(const_iterator pos, const T& value);
     void insert(const_iterator pos, T&& value);
