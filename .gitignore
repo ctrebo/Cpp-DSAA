@@ -5,3 +5,4 @@
 **/build/**
 **/.syntastic_cpp_config
 **/release/**
+**/Release/**
