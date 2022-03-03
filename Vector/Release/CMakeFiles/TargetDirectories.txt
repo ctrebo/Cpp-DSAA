@@ -1,0 +1,13 @@
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/CMakeFiles/Main.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/CMakeFiles/edit_cache.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/CMakeFiles/rebuild_cache.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/CMakeFiles/list_install_components.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/CMakeFiles/install.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/CMakeFiles/install/local.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/CMakeFiles/install/strip.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/Vector/CMakeFiles/edit_cache.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/Vector/CMakeFiles/rebuild_cache.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/Vector/CMakeFiles/list_install_components.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/Vector/CMakeFiles/install.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/Vector/CMakeFiles/install/local.dir
+/home/chris/Dev/CppProjects/DataStructures/Vector/Release/Vector/CMakeFiles/install/strip.dir

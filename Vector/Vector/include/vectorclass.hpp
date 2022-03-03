@@ -308,7 +308,9 @@ constexpr VectorClass<T, Allocator>::size_type VectorClass<T, Allocator>::size()
 
 template<class T, class Allocator>
 void VectorClass<T, Allocator>::reserve(size_type new_cap) {
-    if(new_cap <= capacity_) return;
+    if(new_cap <= capacity_) {
+        return;
+    }
     pointer new_arr  {traits_t::allocate(alloc_, new_cap)};
     for (size_type i {0}; i < size_; ++i) {
         traits_t::construct(alloc_, new_arr + i, std::move(array_[i]));
