@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message("Source dir ${PROJECT_SOURCE_DIR}")
+message("Binary dir ${PROJECT_BINARY_DIR}")
 add_subdirectory(Vector)
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
@@ -19,5 +21,7 @@ endif()
 add_executable(Main src/main.cpp)
 
 target_link_libraries(Main PUBLIC VectorClass)
+
+install(TARGETS Main DESTINATION bin)
 
 

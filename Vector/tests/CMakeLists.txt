@@ -1,6 +1,7 @@
+enable_testing()
 add_executable(tests test.cpp)
 
-find_package(Catch2 REQUIRED)
+find_package(Catch2 3 REQUIRED)
 if(Catch2_FOUND) 
     target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
     include(CTest)
