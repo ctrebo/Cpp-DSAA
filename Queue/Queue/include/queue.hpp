@@ -1,10 +1,30 @@
-#ifndef QUEUE_TPP
-#define QUEUE_TPP
-
 #ifndef QUEUE_H
-#error __FILE__ should only be included from queue.h.
-#endif // QUEUE_H
+#define QUEUE_H
 
+#include <iostream>
+#include <array>
+#include <exception>
+
+template<class T, int size>
+class Queue {
+private:
+    int front_ {};
+    int rear_ {};
+    int capacity_ {};
+    std::array<T, size> arr_{};
+    
+public:
+    Queue();
+
+    void dequeue();
+    void enqueue(T data);
+    T peek();
+    int capacity();
+    void print();
+    bool isEmpty();
+    bool isFull();
+    
+};
 
 template<class T, int size>
 Queue<T, size>::Queue(): capacity_ {size}, rear_ {-1}, front_ {-1} {}
@@ -56,4 +76,4 @@ void Queue<T, size>::print() {
     std::cout << '\n';
 }
 
-#endif // QUEUE_TPP
+#endif // QUEUE_H
