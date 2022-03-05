@@ -1,4 +1,3 @@
-enable_testing()
 add_executable(tests test.cpp)
 
 find_package(Catch2 3 REQUIRED)

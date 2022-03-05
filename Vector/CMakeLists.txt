@@ -10,8 +10,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message("Source dir ${PROJECT_SOURCE_DIR}")
-message("Binary dir ${PROJECT_BINARY_DIR}")
 add_subdirectory(Vector)
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
@@ -24,4 +22,9 @@ target_link_libraries(Main PUBLIC VectorClass)
 
 install(TARGETS Main DESTINATION bin)
 
-
+include(InstallRequiredSystemLibraries)
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
+set(CPACK_PACKAGE_VERSION_MAJOR "${Tutorial_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${Tutorial_VERSION_MINOR}")
+set(CPACK_SOURCE_GENERATOR "TGZ")
+include(CPack)
