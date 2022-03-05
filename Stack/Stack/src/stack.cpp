@@ -1,4 +1,6 @@
-#include "stack.h"
+#include "stack.hpp"
+
+#include <iostream>
 
 int prec(char c) {
      if(c == '^')

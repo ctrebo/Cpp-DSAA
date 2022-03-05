@@ -1,14 +1,32 @@
-#ifndef TWO_STACK_TPP
-#define TWO_STACK_TPP
-
 #ifndef TWO_STACK_H
-#error __FILE__ should only be included from twoClass.h.
-#endif // TWO_STACK_H
+#define TWO_STACK_H
 
-#include "twoStack.h" 
+#include <memory>
+#include <array>
+#include <cstddef>
 #include <iostream>
 
+#define MAX_SIZE_TWOSTACK 10
 
+template<class T, int N>
+class TwoStack {
+private:
+    int top1_ {};
+    int top2_ {};
+   
+    std::array<T, N> arr_ {};
+public:
+    TwoStack();
+    
+    bool push1(T data);
+    bool push2(T data);
+
+    T top1();
+    T top2();
+
+    T pop1();
+    T pop2();
+};
 
 template<class T, int N>
 TwoStack<T, N>::TwoStack(): top1_{-1}, top2_{N / 2 -1} {}
@@ -76,5 +94,4 @@ T TwoStack<T, N>::top2() {
     }
 }
 
-
-#endif //TWO_STACK_TPP
+#endif //TWO_STACK_H

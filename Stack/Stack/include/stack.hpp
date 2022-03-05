@@ -1,14 +1,33 @@
-#ifndef STACK_TPP
-#define STACK_TPP
-
 #ifndef STACK_H
-#error __FILE__ should only be included from myclass.h.
-#endif // STACK_H
+#define STACK_H
 
-
-#include "stack.h" 
+#include <string>
+#include <array>
 #include <iostream>
 
+
+template<class T, int size>
+class Stack {
+private:
+    int top_ {};
+    std::array<T, size> arr_ {};
+   
+    // Private because these functions should only be
+    // used inside other public functions.
+    void insertAtBottom(int data);
+    void sortedInsert(int data);
+public:
+    Stack();
+    bool push(T data);
+    T pop();
+    T peek();
+    bool isEmpty();
+
+    void reverse();
+    void sort();
+    void print();
+    
+};
 
 template<class T, int size>
 Stack<T, size>::Stack(): top_ {-1} {}
@@ -105,5 +124,10 @@ void Stack<T, size>::print() {
 
 }
 
+int prec(char c);
+void infixToPostfix(std::string& s);
+void reverseString(std::string& str); 
+bool balancedBrackets(std::string& str);
+void calculateSpan(int price[], int n, int S[]);
 
-#endif //STACK_TPP
+#endif
