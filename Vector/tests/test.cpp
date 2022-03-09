@@ -62,6 +62,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
             REQUIRE_THAT(v, EqualsVal(value));
         }
     }
+
     
     //VectorClass<T, Allocator>::VectorClass(std::initializer_list<T> l, const Allocator& alloc = Allocator());
     SECTION("Ctor constructs size and capacity to size of initializer list") {
@@ -100,7 +101,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
     //VectorClass<T, Allocator>::VectorClass(InputIt first, InputIt last, const Allocator& alloc = Allocator());
     SECTION("Ctor constructs size and capacity to range between first and last. Elements get deep copied") {
         VectorClass<int> v1 {1, 2, 3, 4, 5};
-        VectorClass<int> v2{v1.cbegin(), v1.cend()};
+        VectorClass<int> v2(v1.cbegin(), v1.cend());
 
         REQUIRE(v2.capacity() == v1.capacity());
         REQUIRE_THAT(v2, EqualsContainer(v1));
@@ -375,7 +376,7 @@ TEST_CASE("Test own implemented vectors modifier functions") {
         int val{5};
         size_type count {5};
         v1.insert(v1.cbegin(), count, val);
-        VectorClass<int> v2 {v1.cbegin(), v1.cbegin() + 5};
+        VectorClass<int> v2 (v1.cbegin(), v1.cbegin() + 5);
         CHECK_THAT(v2, EqualsVal(val));
         CHECK(v1.capacity() > old_capacity);
 

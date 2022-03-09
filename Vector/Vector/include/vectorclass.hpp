@@ -18,6 +18,13 @@ class TD;
 template<class T>
 concept is_it = std::is_base_of_v< std::input_iterator_tag, typename std::iterator_traits<T>::iterator_category >;
 
+// Use to check if all values of variadic template are of the same type
+template<typename T, typename... Ts>
+constexpr inline bool are_same_v = std::conjunction_v<std::is_same<T, Ts>...>;
+
+template<class T,class ... Args>
+decltype(auto) makeVector(T&& t, Args&&... args);
+
 template<class T, class Allocator = std::allocator<T>>
 class VectorClass {
 // Type aliases
@@ -49,10 +56,24 @@ public:
     VectorClass(const VectorClass& other);
     VectorClass(const VectorClass& other, const Allocator& alloc);
     VectorClass(VectorClass&& other);
-    template<class InputIt>
-    requires is_it<InputIt>
-    VectorClass(InputIt first, InputIt last, const Allocator& alloc = Allocator());
+    //template<class InputIt>
+    //requires is_it<InputIt>
+    //VectorClass(InputIt first, InputIt last, const Allocator& alloc = Allocator());
     VectorClass(std::initializer_list<T> l, const Allocator& alloc = Allocator());
+    
+    // Type deductino constructor
+    template<class InputIt, class Alloc = std::allocator<typename std::iterator_traits<InputIt>::value_type>>
+    requires is_it<InputIt>
+    VectorClass(InputIt first, InputIt last, Alloc alloc = Alloc()): size_{static_cast<size_type>(std::distance(first, last))}, capacity_ {size_}, alloc_ {alloc}, array_ {traits_t::allocate(alloc_, capacity_)} {
+        int i {0};
+        for(InputIt it{first}; it != last; ++it) {
+            traits_t::construct(alloc_, array_ + i, *it);
+            ++i;
+        }
+    }
+
+    
+
     ~VectorClass(); 
 
     // Overloading assignment operator
@@ -143,6 +164,9 @@ decltype(auto) makeVector(T&& t, Args&&... args) {
     return VectorClass<T>{ std::forward<T>(t), std::forward<Args>(args)... };
 }
 
+template<class InputIt, class Alloc = std::allocator<typename std::iterator_traits<InputIt>::value_type>>
+VectorClass(InputIt first, InputIt last, Alloc alloc = Alloc()) -> VectorClass<typename std::iterator_traits<InputIt>::value_type, Alloc>;
+
 template<class T, class Allocator>
 void VectorClass<T, Allocator>::destroyAndDealloc() {
     iterator it{ &(array_[capacity_]) };
@@ -184,16 +208,16 @@ VectorClass<T, Allocator>::VectorClass(VectorClass&& other): size_ { other.size_
     other.capacity_ = 0;
 }
 
-template<class T, class Allocator>
-template<class InputIt>
-requires is_it<InputIt>
-VectorClass<T, Allocator>::VectorClass(InputIt first, InputIt last, const Allocator& alloc): size_{static_cast<size_type>(std::distance(first, last))}, capacity_ {size_}, alloc_ {alloc}, array_ {traits_t::allocate(alloc_, capacity_)} {
-    int i {0};
-    for(InputIt it{first}; it != last; ++it) {
-        traits_t::construct(alloc_, array_ + i, *it);
-        ++i;
-    }
-}
+//template<class T, class Allocator>
+//template<class InputIt>
+//requires is_it<InputIt>
+//VectorClass<T, Allocator>::VectorClass(InputIt first, InputIt last, const Allocator& alloc): size_{static_cast<size_type>(std::distance(first, last))}, capacity_ {size_}, alloc_ {alloc}, array_ {traits_t::allocate(alloc_, capacity_)} {
+//    int i {0};
+//    for(InputIt it{first}; it != last; ++it) {
+//        traits_t::construct(alloc_, array_ + i, *it);
+//        ++i;
+//    }
+//}
 
 template<class T, class Allocator>
 VectorClass<T, Allocator>::~VectorClass() {
