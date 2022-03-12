@@ -52,6 +52,7 @@ namespace ds {
         {
         }
 
+
     };
 
     // Template deduction guide for Tuple class
@@ -59,7 +60,7 @@ namespace ds {
     Tuple(CArgs... cargs) -> Tuple<CArgs...>;
 
     template<std::size_t index, class L, class... Args>
-    class ExtractTypeAt {
+    struct ExtractTypeAt {
         using type = typename ExtractTypeAt<index - 1, Args...>::type;
     };
     
@@ -68,13 +69,13 @@ namespace ds {
     using ExtractTypeAt_t = typename ExtractTypeAt<index, Args...>::type;
 
     template<class L, class...Args>
-    class ExtractTypeAt<0, L, Args...> {
+    struct ExtractTypeAt<0, L, Args...> {
         using type = L;
     };
     
     template<std::size_t index, class... Args>
     auto& get(Tuple<Args...>& t) {
-        (static_cast<TupleImpl<index, ExtractTypeAt_t<index, Args...>>&>(t)).get();
+        return (static_cast<TupleImpl<index, ExtractTypeAt_t<index, Args...>>&>(t)).get();
     }
 
 }
