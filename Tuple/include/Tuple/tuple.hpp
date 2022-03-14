@@ -7,8 +7,6 @@
 
 namespace ds {
 
-    
-
     template <std::size_t index, class T>
     class TupleImpl {
     private:
@@ -51,8 +49,6 @@ namespace ds {
         Tuple(CArgs&&... args): TupleRecurBase<0, L, types...>{std::forward<CArgs>(args)...}
         {
         }
-
-
     };
 
     // Template deduction guide for Tuple class
