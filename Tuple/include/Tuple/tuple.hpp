@@ -12,13 +12,14 @@ namespace ds {
     private:
         T val_;
     public:
-       TupleImpl(T& val): val_ {val} {}
-       TupleImpl(T&& val): val_ {std::move(val)} {}
+        TupleImpl(T& val): val_ {val} {}
+        TupleImpl(T&& val): val_ {std::move(val)} {}
 
         T& get() {
-           return val_;
+            return val_;
         }
     };
+                
 
 
     template<std::size_t index, class... types>
@@ -56,6 +57,11 @@ namespace ds {
         }
 
     };
+    
+    template<class... Types>
+    decltype(auto) make_tuple(Types&&... args) {
+        return Tuple<Types...> {std::forward<Types>(args)...};
+    }
 
     // Template deduction guide for Tuple class
     template<class... CArgs>
