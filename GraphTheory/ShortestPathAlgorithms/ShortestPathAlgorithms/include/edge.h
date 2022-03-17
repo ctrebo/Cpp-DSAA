@@ -7,6 +7,7 @@ private:
     int weight_{};
 
 public:
+
     Edge(int value, int weight=0);
     
     void setWeight(int weight);

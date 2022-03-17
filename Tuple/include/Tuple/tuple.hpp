@@ -52,20 +52,19 @@ namespace ds {
         }
 
         template<class... Args>
-        friend bool operator==(Tuple<Args...>& t1, Tuple<Args...>& t2) {
-            return compare_tuple<sizeof...(Args) - 1>(t1, t2);
-        }
+        friend bool operator==(Tuple<Args...>& t1, Tuple<Args...>& t2);
 
     };
-    
-    template<class... Types>
-    decltype(auto) make_tuple(Types&&... args) {
-        return Tuple<Types...> {std::forward<Types>(args)...};
-    }
+
 
     // Template deduction guide for Tuple class
     template<class... CArgs>
     Tuple(CArgs... cargs) -> Tuple<CArgs...>;
+
+    template<class... Types>
+    decltype(auto) make_tuple(Types&&... args) {
+        return Tuple<Types...> {std::forward<Types>(args)...};
+    }
 
     template<std::size_t index, class L, class... Args>
     struct ExtractTypeAt {
@@ -95,6 +94,12 @@ namespace ds {
         }
 
     }
+
+    template<class... Args>
+    bool operator==(Tuple<Args...>& t1, Tuple<Args...>& t2) {
+        return compare_tuple<sizeof...(Args) - 1>(t1, t2);
+    }
+
 
 }
 #endif //TUPLE_HPP
