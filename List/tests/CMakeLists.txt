@@ -1,0 +1,16 @@
+add_executable(tests test.cpp)
+
+find_package(Catch2 3 REQUIRED)
+if(Catch2_FOUND) 
+    target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+    include(CTest)
+    include(Catch)
+    catch_discover_tests(tests)
+endif()
+target_link_libraries(tests PUBLIC ListClass)
+
+find_package(fmt REQUIRED)
+if(fmt_FOUND)
+    include_directories( ${fmt_INCLUDE_DIRS} )
+    target_link_libraries( tests PRIVATE fmt::fmt )
+endif()
