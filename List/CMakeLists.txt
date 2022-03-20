@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(Tuple VERSION 1.0)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(header_files 
     ${CMAKE_CURRENT_SOURCE_DIR}/include/List/list.hpp
@@ -16,9 +18,5 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 endif()
 
 add_executable(Main src/main.cpp)
-set_target_properties(Main PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON
-)
 
 target_link_libraries(Main PUBLIC ListClass)
