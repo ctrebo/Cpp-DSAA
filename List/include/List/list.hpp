@@ -15,7 +15,6 @@ concept is_it = std::is_base_of_v< std::input_iterator_tag, typename std::iterat
 
 template<class T, class Allocator = std::allocator<T>>
 class List {
-class Node;
 private:
     class Node;
 public:
@@ -30,8 +29,8 @@ public:
     using const_reference = const value_type&;
     using pointer = typename traits_t::pointer;
     using const_pointer = typename traits_t::const_pointer;
-    using iterator = typename traits_t::pointer;
-    using const_iterator = typename traits_t::const_pointer;
+    using iterator = Iterator;
+    using const_iterator = const Iterator;
     using size_type = typename traits_t::size_type;
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
@@ -41,18 +40,30 @@ public:
     List();
     explicit List(const Allocator& alloc);
     List(size_type count, const T& value = T(), const Allocator& alloc = Allocator());
-    List(std::initializer_list<T> iList, const Allocator& alloc = Allocator());
     template<class InputIt>
     requires is_it<InputIt>
     List(InputIt first, InputIt last, const Allocator& alloc = Allocator());
+    List(const List& other);
+    List(const List& other, const Allocator& alloc);
+    List(List&& other);
+    List(List&& other, const Allocator& alloc);
+    List(std::initializer_list<T> iList, const Allocator& alloc = Allocator());
     ~List();
 
     // Size functions
     constexpr size_type size() const noexcept;
 
+    // assign functions
+    void assign(size_type count, const T& value);
+
+
     // begin, cbegin...
-    Iterator begin() { return Iterator(head_);}
-    Iterator end() { return nullptr;}
+    iterator begin() noexcept; 
+    const_iterator begin() const noexcept; 
+    const_iterator cbegin() const noexcept; 
+    iterator end() noexcept;
+    const_iterator end() const noexcept;
+    const_iterator cend() const noexcept;
 
     // Inserts elements
     void push_back(const T& value); 
@@ -62,6 +73,14 @@ public:
     reference operator[](const size_type index);
     const_reference operator[](const size_type index) const;
         
+    //assignment operator
+    List<T, Allocator>& operator=(const List& other);
+    List<T, Allocator>& operator=(List&& other) noexcept;
+    List<T, Allocator>& operator=(std::initializer_list<T> iList);
+
+
+    // Get allocator
+    constexpr allocator_type get_allocator() const noexcept;
 private:
     Node* head_;
     Node* tail_;
@@ -75,7 +94,6 @@ private:
     void append(Type&& type);
 
     Node* getNewNode(const value_type& value, Node* head=nullptr, Node* tail=nullptr);
-
 
 };
 
@@ -121,17 +139,64 @@ List<T, Allocator>::List(InputIt first, InputIt last, const Allocator& alloc)
     , tail_ {nullptr}
     , head_ {nullptr}
 {
-
+    for(auto it {first}; it != last; ++it) {
+        append(*it);
+    }
 }
+
+template<class T, class Allocator>
+List<T, Allocator>::List(const List& other)
+    : size_{0}
+    , alloc_ {std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator())}
+    , tail_ {nullptr}
+    , head_ {nullptr}
+{
+    for(auto it = other.cbegin(); it != other.cend(); ++it) {
+        append(*it);
+    }
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::List(const List& other, const Allocator& alloc)
+    : size_{0}
+    , alloc_ {alloc}
+    , tail_ {nullptr}
+    , head_ {nullptr}
+{
+    for(auto it = other.cbegin(); it != other.cend(); ++it) {
+        append(*it);
+    }
+}
+
+template <class T, class Allocator>
+List<T, Allocator>::List(List&& other)
+    : size_{other.size_}
+    , alloc_ {std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator())}
+    , tail_ {other.tail_}
+    , head_ {other.head_}
+{
+    other.size_ = 0;
+    other.head_ = nullptr;
+    other.tail_ = nullptr;
+}
+
+template <class T, class Allocator>
+List<T, Allocator>::List(List&& other, const Allocator& alloc)
+    : size_{other.size_}
+    , alloc_ {alloc}
+    , tail_ {other.tail_}
+    , head_ {other.head_}
+{
+    other.size_ = 0;
+    other.head_ = nullptr;
+    other.tail_ = nullptr;
+}
+
+
 
 template<class T, class Allocator>
 List<T, Allocator>::~List() {
     destroyAndDealloc();
-}
-
-template<class T, class Allocator>
-constexpr typename List<T, Allocator>::size_type List<T, Allocator>::size() const noexcept {
-    return size_;
 }
 
 template<class T, class Allocator>
@@ -149,6 +214,45 @@ void List<T, Allocator>::destroyAndDealloc() {
     size_ = 0;
 }
 
+template<class T, class Allocator>
+constexpr typename List<T, Allocator>::size_type List<T, Allocator>::size() const noexcept {
+    return size_;
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::assign(size_type count, const T& value) {
+}
+
+
+template<class T, class Allocator>
+List<T, Allocator>::iterator List<T, Allocator>::begin() noexcept {
+    return Iterator(head_);
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::const_iterator List<T, Allocator>::begin() const noexcept {
+    return head_;
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::const_iterator List<T, Allocator>::cbegin() const noexcept {
+    return begin();
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::iterator List<T, Allocator>::end() noexcept {
+    return Iterator(nullptr);
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::const_iterator List<T, Allocator>::end() const noexcept {
+    return Iterator(nullptr);
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::const_iterator List<T, Allocator>::cend() const noexcept {
+    return end();
+}
 
 
 template<class T, class Allocator>
@@ -198,6 +302,42 @@ typename List<T, Allocator>::const_reference List<T, Allocator>::operator[](cons
 }
 
 template<class T, class Allocator>
+List<T, Allocator>& List<T, Allocator>::operator=(const List& other) {
+    alloc_ = std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator());
+    size_ = other.size_;
+    destroyAndDealloc();
+    for(auto it=other.cbegin(); it != other.cend(); ++it) {
+        append(*it);
+    }
+    return *this;
+}
+
+template<class T, class Allocator>
+List<T, Allocator>& List<T, Allocator>::operator=(List&& other) noexcept {
+    alloc_ = std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator());
+    destroyAndDealloc();
+
+    size_ = other.size_;
+    other.size_ = 0;
+
+    head_ = other.head_;
+    tail_ = other.tail_;
+    other.head_ = nullptr;
+    other.tail_ = nullptr;
+
+    return *this;
+}
+
+template<class T, class Allocator>
+List<T, Allocator>& List<T, Allocator>::operator=(std::initializer_list<T> iList) {
+    destroyAndDealloc();
+    for(const auto& value: iList) {
+        append(value);
+    }
+    return *this;
+}
+
+template<class T, class Allocator>
 template<class Type>
 void List<T, Allocator>::append(Type&& type) {
     Node* new_node {getNewNode(std::forward<Type>(type))};
@@ -208,6 +348,11 @@ void List<T, Allocator>::append(Type&& type) {
     }
     tail_->next_ = new_node;
     tail_ = new_node;
+}
+
+template<class T, class Allocator>
+constexpr List<T, Allocator>::allocator_type List<T, Allocator>::get_allocator() const noexcept {
+    return alloc_;
 }
 
 template<class T, class Allocator>
