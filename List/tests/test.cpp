@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <array>
 
+
 TEST_CASE("Test own implemented List Class constructors") {
 
     //List();
@@ -68,9 +69,47 @@ TEST_CASE("Test own implemented List Class size functions") {
     SECTION("Returns length of list") {
         REQUIRE(l.size() == length);
     }
+
+    //constexpr bool empty() const noexcept;
+    SECTION("Returns true if list if empty") {
+        ds::List<int> l1;
+        REQUIRE(l1.empty());
+        l1.push_back(2);
+        REQUIRE(!(l1.empty()));
+    }
 }
 
 TEST_CASE("Yest own implemented List Class assign functions") {
+    ds::List<int> l;
+
+    //void assign(size_type count, const T& value);
+    SECTION("Add 'count' nodes of value 'value' to list") {
+        int count {5};
+        int val {13};
+
+        l.assign(count, val);
+        CHECK_THAT(l, EqualsVal(13));
+        CHECK(l.size() == count);
+    }
+
+    //template<class InputIt>
+    //void assign(InputIt first, InputIt last);
+    SECTION("Assign elements between first and last to list") {
+        ds::List<int> l1 {1, 2, 3, 4, 5};
+
+        l.assign(l1.cbegin(), l1.cend());
+
+        CHECK_THAT(l1, EqualsContainer(l));
+    }
+
+    //void assign(std::initializer_list<T> iList);
+    SECTION("Assign elements in 'iList' to list") {
+        std::initializer_list<int> iList {1, 2, 3, 4, 5};
+
+        l.assign(iList);
+
+        CHECK_THAT(l, EqualsContainer(iList));
+    }
 
 }
 
@@ -114,11 +153,55 @@ TEST_CASE("Test own implemented List Class access functions") {
     //reference operator[](const size_type index);
     SECTION("Return reference to object at index 'index'. No index checking takes place") {
         int first_elem {1};
-        int last_elem {5};
-        ds::List<int> l{first_elem, 2, 3, 4, last_elem};
+        int last_elem {10};
+        ds::List<int> l{first_elem, 2, 3, 4, 5, 6, 7, 8, 9, last_elem};
         REQUIRE(l[0] == first_elem);
-        REQUIRE(l[4] == last_elem);
+        REQUIRE(l[9] == last_elem);
     }
+}
+
+TEST_CASE("Test own implemented List Class modifier functions") {
+    
+    ds::List<int> l;
+
+    //void push_back(const T& value); 
+    SECTION("Append l-value reference at end of list") {
+        int value {4};
+        l.push_back(value);
+        CHECK_THAT(l, EqualsVal(value));
+    }
+
+    //void push_back(T&& value); 
+    SECTION("Append r-value reference at end of list") {
+        int value {4};
+        l.push_back(std::move(value));
+        CHECK_THAT(l, EqualsVal(value));
+    }
+    
+    //void clear() noexcept;
+    SECTION("Clear all nodes of list") {
+        l = {1, 2, 3, 4, 5, 6};
+        l.clear();
+        CHECK(l.empty());
+    }
+
+    //iterator insert(const_iterator pos, const T& value);
+    SECTION("Insert Node with value 'value' at position 'pos'") {
+        int first_val {1};
+        int second_value {2};
+        int third_value {3};
+        l.insert(l.cbegin(), first_val);
+        CHECK(l[0] == first_val);
+        CHECK(l.size() == first_val);
+        l.insert(l.cend(), second_value);
+        CHECK(l[1] == second_value);
+        CHECK(l.size() == second_value);
+        l.insert(++(l.cbegin()), third_value);
+        CHECK(l[1] == third_value);
+        CHECK(l.size() == third_value);
+
+    }
+    
 }
 
 TEST_CASE("Test own implemented List Class assignment operator") {

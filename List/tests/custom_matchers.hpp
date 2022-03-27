@@ -13,8 +13,15 @@ struct EqualsValueMatcher : Catch::Matchers::MatcherGenericBase {
 
     template<typename Type>
     bool match(const Type& container) const {
+        // If container is empty it cant match value
+        if(container.size() == 0) {
+            return false;
+        }
+
         return (std::all_of(container.cbegin(), container.cend(),
-                    [&](const T& container_val){ return container_val == val_; }));
+                    [&](const T& container_val){
+                    return container_val == val_;
+                    }));
     }
 
     std::string describe() const override {

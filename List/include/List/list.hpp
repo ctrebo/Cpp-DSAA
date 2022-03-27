@@ -52,9 +52,14 @@ public:
 
     // Size functions
     constexpr size_type size() const noexcept;
+    constexpr bool empty() const noexcept;
 
     // assign functions
     void assign(size_type count, const T& value);
+    template<class InputIt>
+    requires is_it<InputIt>
+    void assign(InputIt first, InputIt last);
+    void assign(std::initializer_list<T> iList);
 
 
     // begin, cbegin...
@@ -65,9 +70,11 @@ public:
     const_iterator end() const noexcept;
     const_iterator cend() const noexcept;
 
-    // Inserts elements
+    // Modifiers 
     void push_back(const T& value); 
     void push_back(T&& value); 
+    void clear() noexcept;
+    iterator insert(const_iterator pos, const T& value);
 
     // Random access specifiers(Even if access time is terrible)
     reference operator[](const size_type index);
@@ -91,7 +98,10 @@ private:
     void destroyAndDealloc();
 
     template<class Type>
-    void append(Type&& type);
+    void append(Type&& value);
+
+    template<class Type>
+    iterator insertAtPos(const_iterator pos, Type&& value);
 
     Node* getNewNode(const value_type& value, Node* head=nullptr, Node* tail=nullptr);
 
@@ -220,9 +230,35 @@ constexpr typename List<T, Allocator>::size_type List<T, Allocator>::size() cons
 }
 
 template<class T, class Allocator>
-void List<T, Allocator>::assign(size_type count, const T& value) {
+constexpr bool List<T, Allocator>::empty() const noexcept {
+    return (size_ == 0);
 }
 
+template<class T, class Allocator>
+void List<T, Allocator>::assign(size_type count, const T& value) {
+    destroyAndDealloc();
+    for(size_type i {0}; i < count; ++i) {
+        append(value);
+    }
+}
+
+template<class T, class Allocator>
+template<class InputIt>
+requires is_it<InputIt>
+void List<T, Allocator>::assign(InputIt first, InputIt last) {
+    destroyAndDealloc();
+    for(auto it=first; it != last; ++it) {
+        append(*it);
+    }
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::assign(std::initializer_list<T> iList) {
+    destroyAndDealloc();
+    for(const auto& value: iList) {
+        append(value);
+    }
+}
 
 template<class T, class Allocator>
 List<T, Allocator>::iterator List<T, Allocator>::begin() noexcept {
@@ -263,6 +299,16 @@ void List<T, Allocator>::push_back(const T& value) {
 template<class T, class Allocator>
 void List<T, Allocator>::push_back(T&& value) {
     append(std::move(value));
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::clear() noexcept {
+    destroyAndDealloc();
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::iterator List<T, Allocator>::insert(const_iterator pos, const T& value) {
+    return insertAtPos(pos, value);
 }
 
 template<class T, class Allocator>
@@ -339,16 +385,43 @@ List<T, Allocator>& List<T, Allocator>::operator=(std::initializer_list<T> iList
 
 template<class T, class Allocator>
 template<class Type>
-void List<T, Allocator>::append(Type&& type) {
-    Node* new_node {getNewNode(std::forward<Type>(type))};
+void List<T, Allocator>::append(Type&& value) {
+    Node* new_node {getNewNode(std::forward<Type>(value))};
     ++size_;
     if(!tail_) {
         tail_ = head_ = new_node;
         return;
     }
     tail_->next_ = new_node;
+    new_node->prev_ = tail_;
     tail_ = new_node;
 }
+
+template<class T, class Allocator>
+template<class Type>
+List<T, Allocator>::iterator List<T, Allocator>::insertAtPos(const_iterator pos, Type&& value) {
+    Node* new_node {getNewNode(std::forward<Type>(value))};
+    ++size_;
+    if((pos == cend()) && (pos == cbegin())) {
+        tail_ = head_ = new_node;
+    } else if(pos == cbegin()) {
+        head_->prev_ = new_node;
+        new_node->next_ = head_;
+        head_ = new_node;
+    } else if(pos == cend()) {
+        tail_->next_ = new_node;
+        new_node->prev_ = tail_;
+        tail_ = new_node;
+    } else {
+        Node* temp {pos.ptr_};
+        temp->prev_->next_ = new_node;
+        new_node->prev_ = temp->prev_;
+        new_node->next_ = temp;
+        temp->prev_ = new_node;
+    }
+    return new_node;
+}
+
 
 template<class T, class Allocator>
 constexpr List<T, Allocator>::allocator_type List<T, Allocator>::get_allocator() const noexcept {
