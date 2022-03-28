@@ -30,10 +30,8 @@ public:
     using pointer = typename traits_t::pointer;
     using const_pointer = typename traits_t::const_pointer;
     using iterator = Iterator;
-    using const_iterator = const Iterator;
     using size_type = typename traits_t::size_type;
     using reverse_iterator = std::reverse_iterator<iterator>;
-    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 public:
     // Constructors and desctructors
@@ -64,17 +62,22 @@ public:
 
     // begin, cbegin...
     iterator begin() noexcept; 
-    const_iterator begin() const noexcept; 
-    const_iterator cbegin() const noexcept; 
+    iterator begin() const noexcept; 
     iterator end() noexcept;
-    const_iterator end() const noexcept;
-    const_iterator cend() const noexcept;
+    iterator end() const noexcept;
 
     // Modifiers 
     void push_back(const T& value); 
     void push_back(T&& value); 
     void clear() noexcept;
-    iterator insert(const_iterator pos, const T& value);
+    iterator insert(iterator pos, const T& value);
+    iterator insert(iterator pos, T&& value);
+    iterator insert( iterator pos, size_type count, const T& value );
+    template<class InputIt>
+    requires is_it<InputIt>
+    iterator insert(iterator pos, InputIt first, InputIt last);
+    iterator insert(iterator pos, std::initializer_list<T> iList);
+
 
     // Random access specifiers(Even if access time is terrible)
     reference operator[](const size_type index);
@@ -101,7 +104,7 @@ private:
     void append(Type&& value);
 
     template<class Type>
-    iterator insertAtPos(const_iterator pos, Type&& value);
+    iterator insertAtPos(iterator pos, Type&& value);
 
     Node* getNewNode(const value_type& value, Node* head=nullptr, Node* tail=nullptr);
 
@@ -161,7 +164,7 @@ List<T, Allocator>::List(const List& other)
     , tail_ {nullptr}
     , head_ {nullptr}
 {
-    for(auto it = other.cbegin(); it != other.cend(); ++it) {
+    for(auto it = other.begin(); it != other.end(); ++it) {
         append(*it);
     }
 }
@@ -173,7 +176,7 @@ List<T, Allocator>::List(const List& other, const Allocator& alloc)
     , tail_ {nullptr}
     , head_ {nullptr}
 {
-    for(auto it = other.cbegin(); it != other.cend(); ++it) {
+    for(auto it = other.begin(); it != other.end(); ++it) {
         append(*it);
     }
 }
@@ -266,13 +269,8 @@ List<T, Allocator>::iterator List<T, Allocator>::begin() noexcept {
 }
 
 template<class T, class Allocator>
-List<T, Allocator>::const_iterator List<T, Allocator>::begin() const noexcept {
-    return head_;
-}
-
-template<class T, class Allocator>
-List<T, Allocator>::const_iterator List<T, Allocator>::cbegin() const noexcept {
-    return begin();
+List<T, Allocator>::iterator List<T, Allocator>::begin() const noexcept {
+    return Iterator(head_);
 }
 
 template<class T, class Allocator>
@@ -281,15 +279,9 @@ List<T, Allocator>::iterator List<T, Allocator>::end() noexcept {
 }
 
 template<class T, class Allocator>
-List<T, Allocator>::const_iterator List<T, Allocator>::end() const noexcept {
+List<T, Allocator>::iterator List<T, Allocator>::end() const noexcept {
     return Iterator(nullptr);
 }
-
-template<class T, class Allocator>
-List<T, Allocator>::const_iterator List<T, Allocator>::cend() const noexcept {
-    return end();
-}
-
 
 template<class T, class Allocator>
 void List<T, Allocator>::push_back(const T& value) {
@@ -307,8 +299,56 @@ void List<T, Allocator>::clear() noexcept {
 }
 
 template<class T, class Allocator>
-List<T, Allocator>::iterator List<T, Allocator>::insert(const_iterator pos, const T& value) {
+List<T, Allocator>::iterator List<T, Allocator>::insert(iterator pos, const T& value) {
     return insertAtPos(pos, value);
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::iterator List<T, Allocator>::insert(iterator pos, T&& value) {
+    return insertAtPos(pos, std::move(value));
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::iterator List<T, Allocator>::insert( iterator pos, size_type count, const T& value ) {
+    if (count == 0) {
+        return pos;
+    }
+    
+    auto return_it = insertAtPos(pos, value);
+    --count;
+    for(size_type i {0}; i < count; ++i) {
+        insertAtPos(pos, value);
+    }
+    return return_it;
+}
+template<class T, class Allocator>
+template<class InputIt>
+requires is_it<InputIt>
+List<T, Allocator>::iterator List<T, Allocator>::insert(iterator pos, InputIt first, InputIt last) {
+    if (first == last) {
+        return pos;
+    }
+    
+    auto return_it = insertAtPos(pos, *first);
+    ++first;
+    for(auto it = first; it != last; ++it) {
+        insertAtPos(pos, *it);
+    }
+    return return_it;
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::iterator List<T, Allocator>::insert(iterator pos, std::initializer_list<T> iList) {
+    Iterator it;
+    for(int i{0};const auto& value: iList) {
+       if (i == 0) {
+           it = insertAtPos(pos, value);
+       } else {
+           insertAtPos(pos, value);
+       }
+       ++i;
+    }
+    return it;
 }
 
 template<class T, class Allocator>
@@ -352,7 +392,7 @@ List<T, Allocator>& List<T, Allocator>::operator=(const List& other) {
     alloc_ = std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator());
     size_ = other.size_;
     destroyAndDealloc();
-    for(auto it=other.cbegin(); it != other.cend(); ++it) {
+    for(auto it=other.begin(); it != other.end(); ++it) {
         append(*it);
     }
     return *this;
@@ -399,16 +439,16 @@ void List<T, Allocator>::append(Type&& value) {
 
 template<class T, class Allocator>
 template<class Type>
-List<T, Allocator>::iterator List<T, Allocator>::insertAtPos(const_iterator pos, Type&& value) {
+List<T, Allocator>::iterator List<T, Allocator>::insertAtPos(iterator pos, Type&& value) {
     Node* new_node {getNewNode(std::forward<Type>(value))};
     ++size_;
-    if((pos == cend()) && (pos == cbegin())) {
+    if((pos == end()) && (pos == begin())) {
         tail_ = head_ = new_node;
-    } else if(pos == cbegin()) {
+    } else if(pos == begin()) {
         head_->prev_ = new_node;
         new_node->next_ = head_;
         head_ = new_node;
-    } else if(pos == cend()) {
+    } else if(pos == end()) {
         tail_->next_ = new_node;
         new_node->prev_ = tail_;
         tail_ = new_node;
@@ -419,7 +459,7 @@ List<T, Allocator>::iterator List<T, Allocator>::insertAtPos(const_iterator pos,
         new_node->next_ = temp;
         temp->prev_ = new_node;
     }
-    return new_node;
+    return Iterator(new_node);
 }
 
 
@@ -459,6 +499,7 @@ public:
     using reference         = value_type&;  
     
     Iterator(pointer ptr) : ptr_{ptr} {}
+    Iterator(): ptr_ {nullptr} {}
 
     T& operator*() const { return ptr_->data_; }
     pointer operator->() { return ptr_; }
@@ -474,6 +515,7 @@ public:
 
 private:
     pointer ptr_;
+    friend class List;
 };
 
 }

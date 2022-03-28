@@ -38,7 +38,7 @@ TEST_CASE("Test own implemented List Class constructors") {
     //List(InputIt first, InputIt last, const Allocator& alloc = Allocator());
     SECTION("Construct list with values in range 'first' and 'last'") {
         ds::List<int> arr {1, 2, 3, 4, 5};
-        ds::List<int> l (arr.cbegin(), arr.cend());
+        ds::List<int> l (arr.begin(), arr.end());
 
         REQUIRE_THAT(l, EqualsContainer(arr));
     }
@@ -97,7 +97,7 @@ TEST_CASE("Yest own implemented List Class assign functions") {
     SECTION("Assign elements between first and last to list") {
         ds::List<int> l1 {1, 2, 3, 4, 5};
 
-        l.assign(l1.cbegin(), l1.cend());
+        l.assign(l1.begin(), l1.end());
 
         CHECK_THAT(l1, EqualsContainer(l));
     }
@@ -123,30 +123,12 @@ TEST_CASE("Test own implemented List Class iterator functions") {
         CHECK(*(l.begin()) == 1);
     }
 
-    //const_iterator begin() const noexcept; 
-    SECTION("Returns const iterator to first node if *this is const") {
-        CHECK(*(const_l.begin()) == 1);
-    }
-
-    //const_iterator begin() const noexcept; 
-    SECTION("Returns const iterator to first node") {
-        CHECK(*(l.cbegin()) == 1);
-    }
 
     //iterator end() noexcept; 
     SECTION("Returns iterator to first node") {
         CHECK(l.end() == nullptr);
     }
 
-    //const_iterator end() const noexcept; 
-    SECTION("Returns iterator to first node") {
-        CHECK(const_l.end() == nullptr);
-    }
-
-    //const_iterator cend() const noexcept; 
-    SECTION("Returns iterator to first node") {
-        CHECK(l.cend() == nullptr);
-    }
 }
 
 TEST_CASE("Test own implemented List Class access functions") {
@@ -185,22 +167,51 @@ TEST_CASE("Test own implemented List Class modifier functions") {
         CHECK(l.empty());
     }
 
-    //iterator insert(const_iterator pos, const T& value);
-    SECTION("Insert Node with value 'value' at position 'pos'") {
+    // Make tests Required becasue they are the foundation for the other
+    // insert function tests
+    
+    //iterator insert(iterator pos, const T& value);
+    SECTION("Insert Node with l-value 'value' at 'pos'") {
         int first_val {1};
         int second_value {2};
         int third_value {3};
-        l.insert(l.cbegin(), first_val);
+        REQUIRE(*(l.insert(l.begin(), first_val)) == first_val);
+        REQUIRE(l[0] == first_val);
+        REQUIRE(l.size() == first_val);
+        REQUIRE(*(l.insert(l.end(), second_value)) == second_value);
+        REQUIRE(l[1] == second_value);
+        REQUIRE(l.size() == second_value);
+        REQUIRE(*(l.insert(++(l.begin()), third_value)) == third_value);
+        REQUIRE(l[1] == third_value);
+        REQUIRE(l.size() == third_value);
+    }
+
+    //iterator insert(iterator pos, T&& value);
+    SECTION("Insert Node with r-value 'value' at 'pos'") {
+        int first_val {1};
+        CHECK(*(l.insert(l.begin(), std::move(first_val))) == first_val);
         CHECK(l[0] == first_val);
         CHECK(l.size() == first_val);
-        l.insert(l.cend(), second_value);
-        CHECK(l[1] == second_value);
-        CHECK(l.size() == second_value);
-        l.insert(++(l.cbegin()), third_value);
-        CHECK(l[1] == third_value);
-        CHECK(l.size() == third_value);
+        
+    }
+
+    //iterator insert( iterator pos, size_type count, const T& value );
+    SECTION("Insert 'count' Nodes with 'value' at 'pos'") {
+        int value {4};
+        int count = value;
+        CHECK(*(l.insert(l.begin(), count, value)) == value);
+        CHECK(l.size() == count);
 
     }
+
+    //iterator insert(iterator pos, std::initializer_list<T> iList);
+    SECTION("Insert elements of 'iList into' List") {
+        std::initializer_list<int> iList {1, 2, 3, 4, 5};
+        CHECK(*(l.insert(l.begin(), iList)) == 1);
+        CHECK(l.size() == iList.size());
+    }
+
+
     
 }
 

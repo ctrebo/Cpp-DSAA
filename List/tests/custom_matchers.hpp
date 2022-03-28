@@ -18,7 +18,7 @@ struct EqualsValueMatcher : Catch::Matchers::MatcherGenericBase {
             return false;
         }
 
-        return (std::all_of(container.cbegin(), container.cend(),
+        return (std::all_of(container.begin(), container.end(),
                     [&](const T& container_val){
                     return container_val == val_;
                     }));
