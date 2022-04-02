@@ -132,13 +132,24 @@ TEST_CASE("Test own implemented List Class iterator functions") {
 }
 
 TEST_CASE("Test own implemented List Class access functions") {
+    int first_elem {1};
+    int last_elem {10};
+    ds::List<int> l{first_elem, 2, 3, 4, 5, 6, 7, 8, 9, last_elem};
+
     //reference operator[](const size_type index);
     SECTION("Return reference to object at index 'index'. No index checking takes place") {
-        int first_elem {1};
-        int last_elem {10};
-        ds::List<int> l{first_elem, 2, 3, 4, 5, 6, 7, 8, 9, last_elem};
         REQUIRE(l[0] == first_elem);
         REQUIRE(l[9] == last_elem);
+    }
+
+    //reference front();
+    SECTION("Returns reference to first element") {
+        CHECK(l.front() == first_elem);
+    }
+
+    //reference back();
+    SECTION("Returns reference to last element") {
+        CHECK(l.back() == last_elem);
     }
 }
 
@@ -211,7 +222,74 @@ TEST_CASE("Test own implemented List Class modifier functions") {
         CHECK(l.size() == iList.size());
     }
 
+    //template<class... Args>
+    //iterator emplace(iterator pos, Args&&... args);
+    SECTION("Emplace element") {
+        int value {4};
+        CHECK(*(l.emplace(l.begin(), value)) == value);
+        CHECK(l.size() == 1);
+    }
 
+    //template<class... Args>
+    //reference emplace(Args&&... args);
+    SECTION("Emplace element at the end of list") {
+        int value_to_emplace {4};
+        CHECK((l.emplace_back(value_to_emplace)) == value_to_emplace);
+        CHECK(l.size() == 1);
+    }
+
+    //iterator erase(iterator pos);
+    SECTION("Erase element from list. Return iterator to next element") {
+        l.assign({1, 2, 3});
+        std::size_t old_size = l.size();
+        auto it = l.erase(l.begin());
+        CHECK(*it == 2);
+        CHECK(l[0] == 2);
+        CHECK(l.size() == (old_size - 1));
+    }
+
+    //iterator erase(iterator first, iterator last);
+    SECTION("Erase elements '[first, last)' from list") {
+        l.assign({1, 2, 3, 4, 5});
+        auto it = l.erase(l.begin(), l.end());
+        CHECK(l.size() == 0);
+    }
+
+    //void pop_back()
+    SECTION("Remove last element of List") {
+        int old_size = l.size();
+        l.pop_back();
+        CHECK(l.size() == old_size);
+        l.assign({1});
+        old_size = l.size();
+        l.pop_back();
+        CHECK(l.size() == old_size -1);
+        
+        int last_element {5};
+        l.assign({1, 2, 3, 4, last_element});
+        old_size = l.size();
+        l.pop_back();
+        CHECK(l.size() == old_size -1);
+        CHECK(l[l.size()- 1] != last_element);
+    }
+
+    //void push_front(const T& value) {};
+    SECTION("Add element at the beginning of the list") {
+        int value {4};
+        int value1 {1};
+        l.push_front(value);
+        CHECK(l[0] == value);
+        l.push_front(value1);
+        CHECK(l[0] == value1);
+    }
+
+    //void push_front(T&& value) {};
+    SECTION("Add element at the beginning of the list") {
+        l.push_front(4);
+        CHECK(l[0] == 4);
+        l.push_front(1);
+        CHECK(l[0] == 1);
+    }
     
 }
 

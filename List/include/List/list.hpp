@@ -77,11 +77,25 @@ public:
     requires is_it<InputIt>
     iterator insert(iterator pos, InputIt first, InputIt last);
     iterator insert(iterator pos, std::initializer_list<T> iList);
+    template<class... Args>
+    iterator emplace(iterator pos, Args&&... args);
+    template<class... Args>
+    reference emplace_back(Args&&... args);
+    iterator erase(iterator pos);
+    iterator erase(iterator first, iterator last);
+    void pop_back();
+    void push_front(const T& value);
+    void push_front(T&& value);
+
 
 
     // Random access specifiers(Even if access time is terrible)
     reference operator[](const size_type index);
     const_reference operator[](const size_type index) const;
+    reference front();
+    const_reference front() const;
+    reference back();
+    const_reference back() const;
         
     //assignment operator
     List<T, Allocator>& operator=(const List& other);
@@ -99,9 +113,12 @@ private:
 
 private:
     void destroyAndDealloc();
+    void deallocNode(Node* node_to_delete);
 
     template<class Type>
     void append(Type&& value);
+    template<class Type>
+    void insertAtFront(Type&& value);
 
     template<class Type>
     iterator insertAtPos(iterator pos, Type&& value);
@@ -228,7 +245,13 @@ void List<T, Allocator>::destroyAndDealloc() {
 }
 
 template<class T, class Allocator>
-constexpr typename List<T, Allocator>::size_type List<T, Allocator>::size() const noexcept {
+void List<T, Allocator>::deallocNode(Node* node_to_delete) {
+    traits_t_i::destroy(alloc_, node_to_delete);
+    traits_t_i::deallocate(alloc_, node_to_delete, 1);
+}
+
+template<class T, class Allocator>
+constexpr List<T, Allocator>::size_type List<T, Allocator>::size() const noexcept {
     return size_;
 }
 
@@ -352,7 +375,113 @@ List<T, Allocator>::iterator List<T, Allocator>::insert(iterator pos, std::initi
 }
 
 template<class T, class Allocator>
-typename List<T, Allocator>::reference List<T, Allocator>::operator[](const size_type index) {
+template<class... Args>
+List<T, Allocator>::iterator List<T, Allocator>::emplace(iterator pos, Args&&... args) {
+    return insertAtPos(pos, value_type(std::forward<Args>(args)...));
+}
+
+template<class T, class Allocator>
+template<class... Args>
+List<T, Allocator>::reference List<T, Allocator>::emplace_back(Args&&... args) {
+    append(value_type(std::forward<Args>(args)...));
+    return tail_->data_;
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::iterator List<T, Allocator>::erase(iterator pos) {
+    Node* temp {pos.ptr_};
+    Node* pointer_to_return {nullptr};
+    if((pos==begin()) && (pos == end())) {
+        deallocNode(temp);
+        --size_;
+        head_ = tail_ = nullptr; 
+
+        return iterator(nullptr);
+    } else if(!(pos->next_)) {
+        tail_ = pos->prev_;     
+        tail_->next_ = nullptr;
+    } else if(pos == begin()) {
+        head_ = pos->next_;
+        head_->prev_ = nullptr;
+        pointer_to_return = head_;
+    } else {
+        pos->prev_->next_ = pos->next_;
+        pos->next_->prev_ = pos->prev_;
+        pointer_to_return = pos->next_;
+    }
+    deallocNode(temp);
+    --size_;
+    return iterator(pointer_to_return);
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::iterator List<T, Allocator>::erase(iterator first, iterator last) {
+    Node* pointer_to_return {nullptr};
+
+    size_type num_deleted_nodes = std::distance(first, last);
+    size_ -= num_deleted_nodes;
+
+    Node* node_to_delete=first.ptr_;
+    Node* next_node = node_to_delete;
+
+    if(first == last) {return last;}
+
+    if((first == begin()) && (last == end())) {
+        // If Nodes dont get deallocated here we have a dangling pointer
+        while (node_to_delete != last.ptr_){
+            next_node = node_to_delete->next_;
+            deallocNode(node_to_delete);
+            node_to_delete = next_node;
+        }
+        head_ = tail_ = nullptr;
+        return iterator(nullptr);
+    } else if(first == begin()) {
+        head_ = last.ptr_;
+        head_->prev_ = nullptr;
+        pointer_to_return = head_;
+    } else if(!(last->next_)) {
+        tail_ = first->prev_;
+        tail_->next_ = nullptr;
+    } else {
+        first->prev_->next_ = last.ptr_;
+        last->prev_ = first->prev_;
+        pointer_to_return = last.ptr_;
+    }
+
+    while (node_to_delete != last.ptr_){
+        next_node = node_to_delete->next_;
+        deallocNode(node_to_delete);
+        node_to_delete = next_node;
+    }
+    return iterator(pointer_to_return);
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::pop_back() {
+    if(!tail_) {return;}
+    --size_;
+    if(tail_ == head_) {
+        deallocNode(tail_);
+        head_ = tail_ = nullptr;
+        return;
+    }
+    tail_ = tail_->prev_;
+    tail_->next_ = nullptr;
+    deallocNode(tail_->next_);
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::push_front(const T& value) {
+   insertAtFront(value); 
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::push_front(T&& value) {
+   insertAtFront(std::move(value)); 
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::reference List<T, Allocator>::operator[](const size_type index) {
     if(index >= size_/2) {
         Node* temp {tail_};
         for(size_type i {size_- 1}; i != index; --i) {
@@ -370,7 +499,7 @@ typename List<T, Allocator>::reference List<T, Allocator>::operator[](const size
 }
 
 template<class T, class Allocator>
-typename List<T, Allocator>::const_reference List<T, Allocator>::operator[](const size_type index) const {
+List<T, Allocator>::const_reference List<T, Allocator>::operator[](const size_type index) const {
     if(index >= size_/2) {
         Node* temp {tail_};
         for(size_type i {size_ - 1}; i != index; --i) {
@@ -385,6 +514,26 @@ typename List<T, Allocator>::const_reference List<T, Allocator>::operator[](cons
         return temp->data_;
 
     }
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::reference List<T, Allocator>::front() {
+    return head_->data_;
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::const_reference List<T, Allocator>::front() const {
+    return head_->data_;
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::reference List<T, Allocator>::back() {
+    return tail_->data_;
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::const_reference List<T, Allocator>::back() const {
+    return tail_->data_;
 }
 
 template<class T, class Allocator>
@@ -435,6 +584,20 @@ void List<T, Allocator>::append(Type&& value) {
     tail_->next_ = new_node;
     new_node->prev_ = tail_;
     tail_ = new_node;
+}
+
+template<class T, class Allocator>
+template<class Type>
+void List<T, Allocator>::insertAtFront(Type&& value) {
+    Node* new_node {getNewNode(std::forward<Type>(value))};
+    ++size_;
+    if(!head_) {
+        tail_ = head_ = new_node;
+        return;
+    }
+    new_node->next_ = head_; 
+    head_->prev_ = new_node;
+    head_ = new_node;
 }
 
 template<class T, class Allocator>
@@ -501,7 +664,9 @@ public:
     Iterator(pointer ptr) : ptr_{ptr} {}
     Iterator(): ptr_ {nullptr} {}
 
-    T& operator*() const { return ptr_->data_; }
+    T& operator*() const {
+        return ptr_->data_; 
+    }
     pointer operator->() { return ptr_; }
 
     // Prefix increment
