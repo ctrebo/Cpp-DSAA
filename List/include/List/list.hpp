@@ -81,6 +81,8 @@ public:
     iterator emplace(iterator pos, Args&&... args);
     template<class... Args>
     reference emplace_back(Args&&... args);
+    template<class... Args>
+    reference emplace_front(Args&&... args);
     iterator erase(iterator pos);
     iterator erase(iterator first, iterator last);
     void pop_back();
@@ -385,6 +387,13 @@ template<class... Args>
 List<T, Allocator>::reference List<T, Allocator>::emplace_back(Args&&... args) {
     append(value_type(std::forward<Args>(args)...));
     return tail_->data_;
+}
+
+template<class T, class Allocator>
+template<class... Args>
+List<T, Allocator>::reference List<T, Allocator>::emplace_front(Args&&... args) {
+    insertAtFront(value_type(std::forward<Args>(args)...));
+    return head_->data_;
 }
 
 template<class T, class Allocator>
