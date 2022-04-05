@@ -88,9 +88,12 @@ public:
     void pop_back();
     void push_front(const T& value);
     void push_front(T&& value);
+    void pop_front();
+    void resize(size_type count, const T& value=T());
+    void swap(List& other);
 
 
-
+    
     // Random access specifiers(Even if access time is terrible)
     reference operator[](const size_type index);
     const_reference operator[](const size_type index) const;
@@ -396,6 +399,8 @@ List<T, Allocator>::reference List<T, Allocator>::emplace_front(Args&&... args) 
     return head_->data_;
 }
 
+
+
 template<class T, class Allocator>
 List<T, Allocator>::iterator List<T, Allocator>::erase(iterator pos) {
     Node* temp {pos.ptr_};
@@ -475,8 +480,8 @@ void List<T, Allocator>::pop_back() {
         return;
     }
     tail_ = tail_->prev_;
-    tail_->next_ = nullptr;
     deallocNode(tail_->next_);
+    tail_->next_ = nullptr;
 }
 
 template<class T, class Allocator>
@@ -487,6 +492,57 @@ void List<T, Allocator>::push_front(const T& value) {
 template<class T, class Allocator>
 void List<T, Allocator>::push_front(T&& value) {
    insertAtFront(std::move(value)); 
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::pop_front() {
+    if(!head_) {return;}
+    --size_;
+    if(tail_ == head_) {
+        deallocNode(head_);
+        head_ = tail_ = nullptr;
+        return;
+    }
+
+    head_ = head_->next_;
+    deallocNode(head_->prev_);
+    head_->prev_ = nullptr;
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::resize(size_type count, const T& value) {
+    if(size_ == count) {return;}
+    if(count < size_) {
+        Node* temp {tail_};
+        Node* prev_temp {temp};
+        for(size_type i {size_}; i > count; --i) {
+            prev_temp = temp->prev_;
+            deallocNode(temp);
+            temp = prev_temp;
+        }
+        tail_ = temp;
+        tail_->next_ = nullptr;
+        size_ = count; 
+    } else {
+        for(size_type i {size_}; i < count; ++i) {
+            append(value);
+        }
+    }
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::swap(List& other) {
+    Node* temp_head {head_};
+    Node* temp_tail {tail_};
+    size_type temp_size {size_};
+
+    head_ = other.head_;
+    tail_ = other.tail_;
+    size_ = other.size_;
+
+    other.head_ = temp_head;
+    other.tail_ = temp_tail;
+    other.size_ = temp_size;
 }
 
 template<class T, class Allocator>
@@ -652,6 +708,7 @@ public:
 
     Node( value_type&& data, Node* next, Node* prev): data_ {std::move(data)}, next_ {next}, prev_ {prev}
     {}
+    
 };
 
 template<class T, class Allocator>

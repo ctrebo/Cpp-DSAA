@@ -232,9 +232,17 @@ TEST_CASE("Test own implemented List Class modifier functions") {
 
     //template<class... Args>
     //reference emplace(Args&&... args);
-    SECTION("Emplace element at the end of list") {
+    SECTION("Emplace element at the end of list. Returns reference to inserted value") {
         int value_to_emplace {4};
         CHECK((l.emplace_back(value_to_emplace)) == value_to_emplace);
+        CHECK(l.size() == 1);
+    }
+
+    //template<class... Args>
+    //reference emplace(Args&&... args);
+    SECTION("Emplace element at the front of the list. Returns reference to inserted value") {
+        int value_to_insert {4};
+        CHECK(l.emplace_front(value_to_insert) == value_to_insert);
         CHECK(l.size() == 1);
     }
 
@@ -270,7 +278,7 @@ TEST_CASE("Test own implemented List Class modifier functions") {
         old_size = l.size();
         l.pop_back();
         CHECK(l.size() == old_size -1);
-        CHECK(l[l.size()- 1] != last_element);
+        CHECK(l[l.size()- 1] == 4);
     }
 
     //void push_front(const T& value) {};
@@ -289,6 +297,47 @@ TEST_CASE("Test own implemented List Class modifier functions") {
         CHECK(l[0] == 4);
         l.push_front(1);
         CHECK(l[0] == 1);
+    }
+
+    //void pop_front()
+    SECTION("Remove last element of List") {
+        int old_size = l.size();
+        l.pop_front();
+        CHECK(l.size() == old_size);
+        l.assign({1});
+        old_size = l.size();
+        l.pop_front();
+        CHECK(l.size() == old_size -1);
+        
+        int last_element {5};
+        l.assign({1, 2, 3, 4, last_element});
+        old_size = l.size();
+        l.pop_front();
+        CHECK(l.size() == old_size -1);
+        CHECK(l[0] == 2);
+    }
+
+    //void resize(size_type count, const T& value=T());
+    SECTION("If count is bigger than 'size_' add nodes with value 'value'. If smaller resize list") {
+        int resize_size {5};
+        l.assign({1, 2, 3, 4, 5, 6, 7});
+        l.resize(resize_size);
+        CHECK(l.size() == resize_size);
+        resize_size = 8;
+        l.resize(resize_size);
+        CHECK(l.size() == resize_size);
+    }
+
+    //void swap(List& other);
+    SECTION("Swap 'tail_', 'head_' and 'size_' of '*this' and 'other'") {
+        l.assign({1, 2, 3, 4, 5, 6, 7, 8});
+        ds::List<int> copy_l {l};
+        ds::List<int> l1 {8, 7, 6, 5, 4, 3, 2, 1};
+        ds::List<int> copy_l1{l1};
+
+        l.swap(l1);
+        CHECK_THAT(l1, EqualsContainer(copy_l));
+        CHECK_THAT(l, EqualsContainer(copy_l1));
     }
     
 }
