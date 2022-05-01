@@ -6,6 +6,8 @@
 #include <initializer_list>
 #include <iostream>
 #include <type_traits>
+#include <functional>
+#include <algorithm>
 
 
 namespace ds{
@@ -92,8 +94,22 @@ public:
     void resize(size_type count, const T& value=T());
     void swap(List& other);
 
-
+    // Operation functions
+    void merge(const List& other);
+    void merge(List&& other);
+    template<class Compare>
+    void merge(const List& other, Compare comp);
+    template<class Compare>
+    void merge(List&& other, Compare comp);
+    template<class Compare=std::less<T>>
+    void sort(Compare comp=Compare{});
+    void unique();
+    void reverse() noexcept;
+    size_type remove(const T& value);
+    template<class UnaryPredicate>
+    size_type remove_if(UnaryPredicate p);
     
+
     // Random access specifiers(Even if access time is terrible)
     reference operator[](const size_type index);
     const_reference operator[](const size_type index) const;
@@ -543,6 +559,150 @@ void List<T, Allocator>::swap(List& other) {
     other.head_ = temp_head;
     other.tail_ = temp_tail;
     other.size_ = temp_size;
+}
+
+// Operation functions
+
+template<class T, class Allocator>
+void List<T, Allocator>::merge(const List& other) {
+    if(&other == this) {
+        return;
+    }
+    
+    for(auto it=other.begin(); it != other.end(); ++it) {
+       append(*it);
+    }
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::merge(List&& other) {
+    if(&other == this) {
+        return;
+    }
+    
+    tail_->next_ = other.head_;
+    other.head_->prev_ = tail_;
+    tail_ = other.tail_;
+    size_ += other.size_;
+
+    other.head_ = other.tail_ = nullptr;
+    other.size_ = 0;
+}
+
+template<class T, class Allocator>
+template<class Compare>
+void List<T, Allocator>::merge(const List& other, Compare comp) {
+    if(&other == this) {
+        return;
+    }
+    
+    for(auto it=other.begin(); it != other.end(); ++it) {
+       append(*it);
+    }
+
+    sort(comp);
+     
+}
+
+template<class T, class Allocator>
+template<class Compare>
+void List<T, Allocator>::merge(List&& other, Compare comp) {
+    if(&other == this) {
+        return;
+    }
+    
+    tail_->next_ = other.head_;
+    other.head_->prev_ = tail_;
+    tail_ = other.tail_;
+    size_ += other.size_;
+
+    other.head_ = other.tail_ = nullptr;
+    other.size_ = 0;
+
+    sort(comp);
+    
+}
+
+template<class T, class Allocator>
+template<class Compare>
+void List<T, Allocator>::sort(Compare comp) {
+    if(size_ <= 1) {
+        return;
+    }
+    Node* curr {head_};
+    while(curr->next_) {
+        Node* index {curr->next_};
+        while(index) {
+            if(comp(index->data_, curr->data_)) {
+                T tmp { std::move(curr->data_) }; 
+                curr->data_ = std::move(index->data_); 
+                index->data_ = std::move(tmp); 
+            }
+            index = index->next_;
+
+        }
+        curr = curr->next_;
+    }
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::unique() {
+    ds::List<T> sorted_list {std::move(*this)};
+    sorted_list.sort();
+}
+
+template<class T, class Allocator>
+void List<T, Allocator>::reverse() noexcept {
+    Node* temp {nullptr};
+    Node* current {head_};
+
+    while (current) { 
+        temp = current->prev_; 
+        current->prev_ = current->next_; 
+        current->next_ = temp;               
+        current = current->prev_; 
+    }       
+
+    /* Before changing head, check for the cases like empty  
+       list and list with only one node */
+    if(temp) {
+        temp = head_;
+        head_ = tail_;
+        tail_ = temp;
+    }
+}
+
+template<class T, class Allocator>
+List<T, Allocator>::size_type List<T, Allocator>::remove(const T& value) {
+    Node* temp {head_};
+    Node* next_node {nullptr};
+    size_type deleted_nodes {0};
+    while(temp) {
+        next_node = temp->next_;
+        if(temp->data_ == value) {
+            erase(iterator(temp));
+            ++deleted_nodes;
+        }
+        temp = next_node;
+    }
+    return deleted_nodes;
+}
+
+template<class T, class Allocator>
+template<class UnaryPredicate>
+List<T, Allocator>::size_type List<T, Allocator>::remove_if(UnaryPredicate p) {
+    Node* temp {head_};
+    Node* next_node {nullptr};
+    size_type deleted_nodes {0};
+    while(temp) {
+        next_node = temp->next_;
+        if(p(temp->data_)) {
+            erase(iterator(temp));
+            ++deleted_nodes;
+        }
+        temp = next_node;
+    }
+    return deleted_nodes;
 }
 
 template<class T, class Allocator>

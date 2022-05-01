@@ -4,6 +4,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstddef>
 #include <array>
+#include <functional>
 
 
 TEST_CASE("Test own implemented List Class constructors") {
@@ -340,6 +341,104 @@ TEST_CASE("Test own implemented List Class modifier functions") {
         CHECK_THAT(l, EqualsContainer(copy_l1));
     }
     
+}
+
+
+TEST_CASE("Test own implemented List Class operation functions") {
+    ds::List<int> l {1, 2, 3, 4, 5};
+
+    // void merge(const List& other);
+    SECTION("Merge 'other' into '*this' without modifying 'other'. Copies of elements are made") {
+        ds::List<int> copy_l {l}; 
+        ds::List<int> f {5, 4, 3, 2, 1};
+        ds::List<int> copy_f {f}; 
+
+        l.merge(f);
+        CHECK_THAT(f, EqualsContainer(copy_f));
+        CHECK(l.size() == (copy_f.size() + copy_l.size()));
+        
+    }
+
+    // void merge(List&& other);
+    SECTION("Merge 'other' into '*this' without making a copy") {
+
+        ds::List<int> copy_l {l}; 
+        ds::List<int> f {5, 4, 3, 2, 1};
+        ds::List<int> copy_f {f}; 
+        
+        l.merge(std::move(f));
+        CHECK_THAT(f, !EqualsContainer(copy_f));
+        CHECK(f.size() == 0);
+        CHECK(l.size() == (copy_f.size() + copy_l.size()));
+    }
+
+    //template<class Compare>
+    //void merge(const List& other, Compare comp);
+    SECTION("Merge lists(deep copy) and then sort them accodring to 'comp'") {
+        l.assign({ 5,9,1,3,3 });
+        ds::List<int> copy_l {l}; 
+        ds::List<int> f = { 8, 7, 2, 3, 4, 4 };
+        ds::List<int> copy_f {f}; 
+
+        l.merge(f, std::less<int>());
+        CHECK(l.size() == (copy_f.size() + copy_l.size()));
+        CHECK(l[0] <= l[1]);
+        CHECK(l[1] <= l[2]);
+
+    }
+
+    //template<class Compare>
+    //void merge(List&& other, Compare comp);
+    SECTION("Merge lists(move) and then sort them accodring to 'comp'") {
+        l.assign({ 5,9,1,3,3 });
+        ds::List<int> copy_l {l}; 
+        ds::List<int> f = { 8, 7, 2, 3, 4, 4 };
+        ds::List<int> copy_f {f}; 
+
+        l.merge(std::move(f), std::less<int>());
+        CHECK_THAT(f, !EqualsContainer(copy_f));
+        CHECK(l.size() == (copy_f.size() + copy_l.size()));
+        CHECK(l[0] <= l[1]);
+        CHECK(l[1] <= l[2]);
+    }
+
+    //template<class Compare=std::less<T>>
+    //void sort(Compare comp=Compare{});
+    SECTION("Sort list") {
+        l.assign({ 5,9,1,3,3 });
+        l.sort();
+        CHECK(l[0] <= l[1]);
+        CHECK(l[1] <= l[2]);
+    }
+
+    //void reverse() noexcept;
+    SECTION("Reverse list") {
+        l.assign({ 5,9,1,3,3 });
+        int last_elem {l.back()};
+        int first_elem {l.front()};
+
+        l.reverse();
+
+        CHECK(l.front() == last_elem);
+        CHECK(l.back() == first_elem);
+    }
+
+    //size_type remove(const T& val);
+    SECTION("Remove elements that match 'val'. Return number of removed elements") {
+        l.assign({1, 2, 1, 1, 3, 3, 3, 4, 5, 4});
+        int old_size = l.size();
+        CHECK(l.remove(1) == 3);
+        CHECK(old_size - 3 == l.size());
+    }
+
+    //template<class UnaryPredicate>
+    //size_type remove_if(UnaryPredicate p);
+    SECTION("Remove elements for which 'p(v)' is true. Return number of removed elements") {
+        l.assign({1, 2, 1, 1, 3, 3, 3, 4, 5, 4});
+        int old_size = l.size();
+        CHECK(l.remove_if([](int val) {return val == 1;}) == 3);
+        CHECK(old_size - 3 == l.size());
+    }
 }
 
 TEST_CASE("Test own implemented List Class assignment operator") {

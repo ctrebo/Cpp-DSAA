@@ -32,6 +32,8 @@ public:
 
     T& operator[](const Key& key);
 
+    // Modifiers
+
 private:
     size_type capacity_;
     size_type size_;
@@ -41,6 +43,7 @@ private:
     static size_type addUpNums(size_type num);
     size_type hashFunction(const Key& key);
     size_type moduloIndex(size_type index) const;
+
 };
 
 template<class Key, class T>

@@ -251,6 +251,37 @@ List<T, Allocator>::~List() {
 }
 
 template<class T, class Allocator>
+class List<T, Allocator>::Iterator {
+public:
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type   = std::ptrdiff_t;
+    using value_type        = Node;
+    using pointer           = value_type*; 
+    using reference         = value_type&;  
+    
+    Iterator(pointer ptr) : ptr_{ptr} {}
+    Iterator(): ptr_ {nullptr} {}
+
+    T& operator*() const {
+        return ptr_->data_; 
+    }
+    pointer operator->() { return ptr_; }
+
+    // Prefix increment
+    Iterator& operator++() { ptr_=ptr_->next_; return *this; }  
+
+    // Postfix increment
+    Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
+
+    friend bool operator== (const Iterator& a, const Iterator& b) { return a.ptr_ == b.ptr_; };
+    friend bool operator!= (const Iterator& a, const Iterator& b) { return a.ptr_ != b.ptr_; };
+
+private:
+    pointer ptr_;
+    friend class List;
+};
+
+template<class T, class Allocator>
 void List<T, Allocator>::destroyAndDealloc() {
     if(!tail_) return;
     Node* node_to_delete {tail_};
@@ -878,36 +909,6 @@ List<T, Allocator>::Node* List<T, Allocator>::getNewNode(const value_type& value
         return new_node;
     }
 
-template<class T, class Allocator>
-class List<T, Allocator>::Iterator {
-public:
-    using iterator_category = std::forward_iterator_tag;
-    using difference_type   = std::ptrdiff_t;
-    using value_type        = Node;
-    using pointer           = value_type*; 
-    using reference         = value_type&;  
-    
-    Iterator(pointer ptr) : ptr_{ptr} {}
-    Iterator(): ptr_ {nullptr} {}
-
-    T& operator*() const {
-        return ptr_->data_; 
-    }
-    pointer operator->() { return ptr_; }
-
-    // Prefix increment
-    Iterator& operator++() { ptr_=ptr_->next_; return *this; }  
-
-    // Postfix increment
-    Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
-
-    friend bool operator== (const Iterator& a, const Iterator& b) { return a.ptr_ == b.ptr_; };
-    friend bool operator!= (const Iterator& a, const Iterator& b) { return a.ptr_ != b.ptr_; };
-
-private:
-    pointer ptr_;
-    friend class List;
-};
 
 }
 
