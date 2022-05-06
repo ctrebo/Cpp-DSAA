@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(header_files
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Ds/hashtable.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Ds/list.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/Ds/
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Ds/binarysearchtree.hpp
 )
 
 add_library(Ds INTERFACE)

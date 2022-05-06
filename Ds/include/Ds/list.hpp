@@ -271,7 +271,7 @@ public:
     Iterator& operator++() { ptr_=ptr_->next_; return *this; }  
 
     // Postfix increment
-    Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
+    Iterator operator++(T) { Iterator tmp = *this; ++(*this); return tmp; }
 
     friend bool operator== (const Iterator& a, const Iterator& b) { return a.ptr_ == b.ptr_; };
     friend bool operator!= (const Iterator& a, const Iterator& b) { return a.ptr_ != b.ptr_; };
