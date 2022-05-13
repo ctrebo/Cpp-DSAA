@@ -1,6 +1,7 @@
 SET(test_files
     ${CMAKE_CURRENT_SOURCE_DIR}/list_test.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/hashtable_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/bst_test.cpp
 )
 
 add_executable(tests ${test_files})

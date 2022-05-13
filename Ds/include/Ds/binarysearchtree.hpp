@@ -5,6 +5,8 @@
 #include <iostream>
 #include <stack>
 #include <utility>
+#include <initializer_list>
+#include <algorithm>
 
 namespace ds {
 
@@ -25,10 +27,36 @@ public:
     
 public:
     BST();
+    BST(std::initializer_list<T> iList);
+    BST(const BST<T>& other);
+    BST(BST<T>&& other) noexcept;
     ~BST();
+
+    constexpr size_type size() const;
+    constexpr bool empty() const;
+
+    constexpr BST<T>::Iterator begin() const noexcept;
+    constexpr BST<T>::Iterator end() const noexcept;
+
+    std::pair<BST<T>::Iterator, bool> insert(const T& value);
+    std::pair<BST<T>::Iterator, bool> insert(T&& value);
+    void insert(std::initializer_list<T> iList);
+    void clear();
+    template<class... Args>
+    std::pair<BST<T>::Iterator, bool> emplace(Args&&... args);
+    
+    void postOrder();
+    void inOrder();
+    void preOrder();
+
+    // Overloaded '=' operator
+    BST<T> operator=(BST<T> other) noexcept;
+
+    friend void swap<T>(BST<T>& first, BST<T>& second) noexcept;
     
 private:
     node_pointer root_;
+    size_type size_;
 private:
 
     void deallocNode(Node* node);
@@ -37,30 +65,61 @@ private:
     template<class Type>
     std::pair<BST<T>::Iterator, bool> insertPriv(Type&& value);
     void destruct(Node* node);
+    void postOrderRec(Node* node);
+    void inOrderRec(Node* node);
+    void preOrderRec(Node* node);
 };
 
 template<class T>
 class BST<T>::Node {
 public:
-    Node(T data, Node* left=nullptr, Node* right=nullptr): data_{data}, left_ {left}, right_ {right}
+    Node(const T& data, Node* left=nullptr, Node* right=nullptr): data_{data}, left_ {left}, right_ {right}
     {}
 
-    static Node* createNode(T value, Node* left=nullptr,Node* right=nullptr) {
+    Node(T&& data, Node* left=nullptr, Node* right=nullptr): data_{std::move(data)}, left_ {left}, right_ {right}
+    {}
+
+    static Node* getNewNode(T value, Node* left=nullptr,Node* right=nullptr) {
         Node* new_node {new Node {value, left, right}};     
         return new_node;
     }
-public:
+private:
     T data_;
     Node* left_;
     Node* right_;
+    
+    friend class BST;
 };
 
 template<class T>
-BST<T>::BST(): root_ {nullptr} {}
+BST<T>::BST(): root_ {nullptr}, size_ {0} {}
+
+template<class T>
+BST<T>::BST(std::initializer_list<T> iList): root_ {nullptr}, size_ {0} {
+    for(const auto& elem: iList) {
+        if((exists(elem)).second) {
+            continue;
+        }
+        insertPriv(elem);
+    }
+}
+
+template<class T>
+BST<T>::BST(const BST<T>& other): BST() {
+    for(const auto& elem: other) {
+        insertPriv(elem);
+    }
+}
+
+template<class T>
+BST<T>::BST(BST<T>&& other) noexcept: BST() {
+    swap(*this, other);
+}
 
 template<class T>
 BST<T>::~BST() {
     destruct(root_);
+    root_ = nullptr;
 }
 
 template<class T>
@@ -72,8 +131,9 @@ public:
     using pointer           = value_type*; 
     using reference         = value_type&;  
 
-    Iterator(pointer node): ptr_ {node} {
+    Iterator(pointer node) {
         fillStack(node);
+        next();
     }
     
     T& operator*() const {
@@ -83,7 +143,10 @@ public:
     pointer operator->() { return ptr_; }
 
     // Prefix increment
-    Iterator& operator++() { next(); return *this; }
+    Iterator& operator++() {
+        next();
+        return *this;
+    }
     // Postfix increment
     Iterator operator++(T) { Iterator tmp = *this; ++(*this); return tmp; }
 
@@ -102,21 +165,100 @@ private:
     }
 
     void next() {
-        pointer curr {stack_.top()};
-        stack_.pop();
-        if(curr->right_) {
-            fillStack(curr->right_);
+        if(!stack_.empty()) {
+            pointer curr {stack_.top()};
+            stack_.pop();
+            if(curr->right_) {
+                fillStack(curr->right_);
+            }
+            ptr_ = curr;
+            return;
         }
-        ptr_ = stack_.top();
+        ptr_ = nullptr;
     }
+
     
     friend class BST;
 };
 
 template<class T>
+constexpr BST<T>::size_type BST<T>::size() const {
+    return size_;
+}
+
+template<class T>
+constexpr bool BST<T>::empty() const {
+    return size_==0;
+}
+
+template<class T>
+constexpr BST<T>::Iterator BST<T>::begin() const noexcept {
+    return Iterator(root_);
+}
+
+template<class T>
+constexpr BST<T>::Iterator BST<T>::end() const noexcept {
+    return Iterator(nullptr);
+}
+
+template<class T>
+std::pair<typename BST<T>::Iterator, bool> BST<T>::insert(const T& value) {
+    return insertPriv(value);
+}
+
+template<class T>
+std::pair<typename BST<T>::Iterator, bool> BST<T>::insert(T&& value) {
+    return insertPriv(std::move(value));
+}
+
+template<class T>
+void BST<T>::insert(std::initializer_list<T> iList) {
+    for(const auto& elem: iList) {
+        if((exists(elem)).second) {
+            continue;
+        }
+        insertPriv(elem);
+    }
+}
+
+template<class T>
+void BST<T>::clear() {
+    destruct(root_);
+    root_ = nullptr;
+}
+
+template<class T>
+template<class... Args>
+std::pair<typename BST<T>::Iterator, bool> BST<T>::emplace(Args&&... args) {
+    return insertPriv(value_type(args...));
+}
+
+template<class T>
 void BST<T>::deallocNode(Node* node) {
     delete node; 
     node = nullptr;
+}
+
+template<class T>
+void BST<T>::postOrder() {
+    postOrder(root_);
+}
+
+template<class T>
+void BST<T>::inOrder() {
+    inOrderRec(root_);
+}
+
+template<class T>
+void BST<T>::preOrder() {
+    preOrderRec(root_);
+}
+
+template<class T>
+BST<T> BST<T>::operator=(BST<T> other) noexcept {
+    swap(*this, other);
+
+    return *this;
 }
 
 template<class T>
@@ -127,8 +269,7 @@ std::pair<typename BST<T>::Iterator, bool> BST<T>::exists(const T& value) const 
         if(curr->data_ == value) {
             return std::pair<Iterator, bool>(Iterator(curr), true); 
         }
-
-        if(curr->data_ < value) {
+        if(value < curr->data_) {
             curr = curr->left_;
         } else {
             curr = curr->right_;
@@ -144,9 +285,28 @@ std::pair<typename BST<T>::Iterator, bool> BST<T>::insertPriv(Type&& value) {
     if(pair.second) {
         return std::pair<Iterator, bool>(pair.first, false);
     }
+    Node* new_node {Node::getNewNode(std::forward<Type>(value))};
     if(!root_) {
-        root_ = BST<T>::getNewNode(value);
+        root_ = new_node;
+    } else {
+        Node* temp {root_};
+        Node* last_node {root_};
+        while(temp) {
+            last_node = temp;
+            if(value > temp->data_) {
+                temp = temp->right_;
+            } else {
+                temp = temp->left_;
+            }
+        }
+        if(value > last_node->data_) {
+            last_node->right_ = new_node;
+        } else {
+            last_node->left_ = new_node;
+        }
     }
+    ++size_;
+    return std::pair<Iterator, bool>(Iterator(new_node), true);
 }
 
 template<class T>
@@ -162,9 +322,58 @@ void BST<T>::destruct(Node* node) {
         destruct(node->right_);
     }
 
+    --size_;
     delete node;
+    node->left_ = nullptr;
+    node->right_ = nullptr;
+    node = nullptr;
 }
 
+template<class T>
+void BST<T>::postOrderRec(Node* node) {
+    if (!node) {
+        return;
+    }
+
+    postOrderRec(node->left_);
+    postOrderRec(node->right_);
+    
+    std::cout << node->data_ << ' ';
+}
+
+template<class T>
+void BST<T>::inOrderRec(Node* node) {
+    if (!node) {
+        return;
+    }
+
+    inOrderRec(node->left_);
+
+    std::cout << node->data_ << ' ';
+
+    inOrderRec(node->right_);
+    
+}
+
+template<class T>
+void BST<T>::preOrderRec(Node* node) {
+    if (!node) {
+        return;
+    }
+
+    std::cout << node->data_ << ' ';
+
+    preOrderRec(node->left_);
+    preOrderRec(node->right_);
+    
+}
+
+template<class T>
+void swap(BST<T>& first, BST<T>& second) noexcept {
+    using std::swap;
+    swap(first.size_, second.size_);
+    swap(first.root_, second.root_);
+}
 
 }
 
