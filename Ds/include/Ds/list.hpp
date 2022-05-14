@@ -1,6 +1,8 @@
 #ifndef LIST_CLASS_HPP
 #define LIST_CLASS_HPP
 
+#include "concepts.hpp"
+
 #include <cstddef>
 #include <memory>
 #include <initializer_list>
@@ -12,8 +14,6 @@
 
 namespace ds{
 
-template<class T>
-concept is_it = std::is_base_of_v< std::input_iterator_tag, typename std::iterator_traits<T>::iterator_category >;
 
 template<class T, class Allocator = std::allocator<T>>
 class List {

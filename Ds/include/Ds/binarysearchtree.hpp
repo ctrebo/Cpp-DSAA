@@ -1,6 +1,8 @@
 #ifndef BINARY_SEARCH_TREE_HPP
 #define BINARY_SEARCH_TREE_HPP
 
+#include "concepts.hpp"
+
 #include <cstddef>
 #include <iostream>
 #include <stack>
@@ -30,6 +32,9 @@ public:
     BST(std::initializer_list<T> iList);
     BST(const BST<T>& other);
     BST(BST<T>&& other) noexcept;
+    template<class InputIt>
+    requires is_it<InputIt>
+    BST(InputIt first, InputIt last);
     ~BST();
 
     constexpr size_type size() const;
@@ -95,7 +100,7 @@ template<class T>
 BST<T>::BST(): root_ {nullptr}, size_ {0} {}
 
 template<class T>
-BST<T>::BST(std::initializer_list<T> iList): root_ {nullptr}, size_ {0} {
+BST<T>::BST(std::initializer_list<T> iList): BST() {
     for(const auto& elem: iList) {
         if((exists(elem)).second) {
             continue;
@@ -114,6 +119,18 @@ BST<T>::BST(const BST<T>& other): BST() {
 template<class T>
 BST<T>::BST(BST<T>&& other) noexcept: BST() {
     swap(*this, other);
+}
+
+template<class T>
+template<class InputIt>
+requires is_it<InputIt>
+BST<T>::BST(InputIt first, InputIt last) {
+    for(auto it=first; it != last; ++it) {
+        if(exists(*it).second) {
+            continue;
+        }
+        insertPriv(*it);
+    }
 }
 
 template<class T>
