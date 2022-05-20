@@ -46,9 +46,13 @@ public:
     std::pair<BST<T>::Iterator, bool> insert(const T& value);
     std::pair<BST<T>::Iterator, bool> insert(T&& value);
     void insert(std::initializer_list<T> iList);
+    template<class InputIt>
+    requires is_it<InputIt>
+    void insert(InputIt first, InputIt last);
     void clear();
     template<class... Args>
     std::pair<BST<T>::Iterator, bool> emplace(Args&&... args);
+    bool erase(const T& value);
     
     void postOrder();
     void inOrder();
@@ -73,6 +77,10 @@ private:
     void postOrderRec(Node* node);
     void inOrderRec(Node* node);
     void preOrderRec(Node* node);
+
+    Node* remove(Node* node, const T& data);
+    Node* digLeft(Node* node);
+    Node* digRight(Node* node);
 };
 
 template<class T>
@@ -124,7 +132,7 @@ BST<T>::BST(BST<T>&& other) noexcept: BST() {
 template<class T>
 template<class InputIt>
 requires is_it<InputIt>
-BST<T>::BST(InputIt first, InputIt last) {
+BST<T>::BST(InputIt first, InputIt last): BST() {
     for(auto it=first; it != last; ++it) {
         if(exists(*it).second) {
             continue;
@@ -239,6 +247,18 @@ void BST<T>::insert(std::initializer_list<T> iList) {
 }
 
 template<class T>
+template<class InputIt>
+requires is_it<InputIt>
+void BST<T>::insert(InputIt first, InputIt last) {
+    for(auto it=first; it != last; ++it) {
+        if(exists(*it).second) {
+            continue;
+        }
+        insertPriv(*it);
+    }
+}
+
+template<class T>
 void BST<T>::clear() {
     destruct(root_);
     root_ = nullptr;
@@ -248,6 +268,19 @@ template<class T>
 template<class... Args>
 std::pair<typename BST<T>::Iterator, bool> BST<T>::emplace(Args&&... args) {
     return insertPriv(value_type(args...));
+}
+
+template<class T>
+bool BST<T>::erase(const T& value) {
+    auto pair = exists(value);
+
+    if(!(pair.second)) {
+        return false;
+    }
+    
+    root_ = remove(root_, value);
+    --size_;
+    return true;
 }
 
 template<class T>
@@ -390,6 +423,60 @@ void swap(BST<T>& first, BST<T>& second) noexcept {
     using std::swap;
     swap(first.size_, second.size_);
     swap(first.root_, second.root_);
+}
+
+
+template<class T>
+BST<T>::Node* BST<T>::remove(Node* node, const T& data) {
+    if (!node) {
+        return nullptr;
+    }
+
+    if(data < node->data_) {
+        node->left_ = remove(node->left_, data);
+    } else if(data > node->data_) {
+        node->right_ = remove(node->right_, data);
+    } else {
+        if(!(node->left_)) {
+            auto right_child = node->right_;
+            deallocNode(node);
+
+            return right_child;
+        } else if (!(node->right_)) {
+            auto left_child = node->left_;
+            deallocNode(node);
+
+            return left_child;
+        } else {
+            auto tmp = digLeft(node->right_);
+            node->data_ = tmp->data_;
+
+            node->right_ = remove(node->right_, tmp->data_);
+        }
+
+    }
+
+    return node;
+}
+
+template<class T>
+BST<T>::Node* BST<T>::digLeft(Node* node) {
+    auto tmp = node;
+    while(tmp->left_) {
+        tmp = tmp->left_;
+    }
+
+    return tmp;
+}
+
+template<class T>
+BST<T>::Node* BST<T>::digRight(Node* node) {
+    auto tmp = node;
+    while(tmp->right_) {
+        tmp = tmp->right_;
+    }
+
+    return tmp;
 }
 
 }

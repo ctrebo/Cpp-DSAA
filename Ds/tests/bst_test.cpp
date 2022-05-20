@@ -36,6 +36,15 @@ TEST_CASE("Test own implemented BSTs Constructors") {
         REQUIRE_THAT(b1, EqualsContainer(b2));
         REQUIRE(b.empty());
     }
+
+    //template<class InputIt>
+    //BST(InputIt first, InputIt last);
+    SECTION("Copy values between first and last in bst") {
+        std::array arr {1, 2, 3, 4, 5, 6, 7};
+        ds::BST<int> bst {arr.begin(), arr.end()};
+
+        REQUIRE_THAT(arr, EqualsContainer(arr));
+    }
 }
 
 TEST_CASE("Test own implemented BSTs modifier functions") {
@@ -81,6 +90,18 @@ TEST_CASE("Test own implemented BSTs modifier functions") {
         CHECK(b.size() == iList.size() - 1);
     }
 
+    //template<class InputIt>
+    //void insert(InputIt first, InputIt last);
+    SECTION("Insert values between first and last") {
+
+        std::array arr {1, 2, 3, 4, 5, 6, 7};
+        ds::BST<int> bst;
+
+        bst.insert(arr.begin(), arr.end());
+
+        REQUIRE_THAT(arr, EqualsContainer(arr));
+    }
+
     //template<class... Args>
     //std::pair<BST<T>::Iterator, bool> emplace(Args&&... args);
     SECTION("Emplace element") {
@@ -94,6 +115,19 @@ TEST_CASE("Test own implemented BSTs modifier functions") {
         CHECK(b.size() == 1);
         CHECK(pair2.second == false);
         CHECK(*(pair2.first) == 4);
+    }
+
+    //bool erase(const T& value);
+    SECTION("Remove value from BST") {
+        b.insert({ 5, 3, 1, 8, 2 ,4 , 6 ,99, 123, 424 });
+        CHECK(!b.erase(100));
+        CHECK(b.size() == 10);
+
+        CHECK(b.erase(1));
+        CHECK(b.size() == 9);
+
+        CHECK(b.erase(123));
+        CHECK(b.size() == 8);
     }
 
     //void clear();
@@ -115,7 +149,6 @@ TEST_CASE("Test own implemented BSTs operator= functions") {
 
         CHECK_THAT(bst, EqualsContainer(bst1));
     }
-    
 
 
 }
