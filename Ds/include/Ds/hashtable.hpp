@@ -11,10 +11,10 @@
 #include <iostream>
 #include <functional>
 #include <memory>
+#include <cassert>
+#include <exception>
 
 namespace ds {
-
-#define MAX_SIZE 5000
 
 template<class Key, class T>
 class HashTable {
@@ -27,12 +27,23 @@ public:
     using const_reference = const value_type&;
 
 public:
-    HashTable(size_type size=MAX_SIZE);
-    HashTable(std::initializer_list<value_type>);
+    HashTable();
+    HashTable(size_type size);
+    HashTable(std::initializer_list<value_type> iList);
 
-    T& operator[](const Key& key);
+    // Size functions
+    size_type size() const;
+    size_type capacity() const;
+    bool empty() const;
+    bool exists(const key_type& key);
+
 
     // Modifiers
+    bool insert(const key_type& key, const mapped_type& value);
+    bool insert(const key_type& key, const mapped_type&& value);
+    T& operator[](const key_type& key);
+    const T& operator[](const key_type& key) const;
+    
 
 private:
     size_type capacity_;
@@ -43,38 +54,116 @@ private:
     static size_type addUpNums(size_type num);
     size_type hashFunction(const Key& key);
     size_type moduloIndex(size_type index) const;
+    template<class Type>
+    bool insertPriv(const Key& key, Type&& value);
 
 };
+
+template<class Key, class T>
+HashTable<Key, T>::HashTable(): capacity_ {10000}, arr_(capacity_), size_(0) {}
 
 template<class Key, class T>
 HashTable<Key, T>::HashTable(size_type size): capacity_ {size}, arr_(capacity_), size_ {0} {}
 
 template<class Key, class T>
-HashTable<Key, T>::HashTable(std::initializer_list<value_type>) {}
-
+HashTable<Key, T>::HashTable(std::initializer_list<value_type> iList): capacity_ {iList.size() < 10000 ? 10000 : iList.size()*2}, size_(0), arr_(capacity_) {
+    for(const auto& elem: iList) {
+        insertPriv(elem.first, elem.second);
+    }
+}
 
 template<class Key, class T>
-T& HashTable<Key, T>::operator[](const Key& key) {
-    size_type index = HashTable<Key, T>::hashFunction(key);
-    if(key == (arr_[index]).first) {
-        return (arr_[index].second);
-    } else if(!(arr_[index]).first) {
-        arr_[index].first = key;
-        return (arr_[index].second);
+HashTable<Key, T>::size_type HashTable<Key, T>::size() const {
+    assert(size_ <= capacity_ && "Size can not be greater than 200");
+    return size_;
+}
+
+template<class Key, class T>
+HashTable<Key, T>::size_type HashTable<Key, T>::capacity() const {
+    assert(size_ <= capacity_ && "Size can not be greater than capacity");
+    return capacity_;
+}
+
+template<class Key, class T>
+bool HashTable<Key, T>::empty() const {
+    assert(size_ <= capacity_ && "Size can not be greater than capacity");
+    return size_ == 0;
+}
+
+template<class Key, class T>
+bool HashTable<Key, T>::exists(const key_type& key) {
+    size_type index {HashTable<Key, T>::hashFunction(key)};
+    size_type old_index {index};
+    while(true) {
+        if(key == arr_[moduloIndex(index)].first) {
+            return true;
+        }
+        if (index == old_index) {
+            break;
+        }
+        ++index; 
     }
-    else {
-        ++index;
+    return false;
+}
+
+template<class Key, class T>
+T& HashTable<Key, T>::operator[](const key_type& key) {
+    std::cout << "in here";
+    size_type index = HashTable<Key, T>::hashFunction(key);
+    assert(size_ <= capacity_ && size_ >= 0 && "Something went wrong!");
+    if (exists(key)) {
+        if(key == arr_[index].first) {
+            return arr_[index].second;
+        } else {
+            ++index;
+            while(true) {
+                if(key == arr_[moduloIndex(index)].first) {
+                    return arr_[moduloIndex(index)].second;
+                }
+                ++index;
+            }
+        }
+    } else {
         while(true) {
-            if(key == (arr_[moduloIndex(index)]).first) {
-                break;
-            } else if(!(arr_[moduloIndex(index)].first)) {
+            if(!(arr_[moduloIndex(index)].first)) {
                 arr_[moduloIndex(index)].first = key;
-                break;
+                ++size_;
+                return (arr_[moduloIndex(index)].second);
             }
             ++index;
         }
-        return (arr_[moduloIndex(index)].second);
     }
+}
+
+template<class Key, class T>
+const T& HashTable<Key, T>::operator[](const key_type& key) const {
+    assert(size_ <= capacity_ && size_ >= 0 && "Something went wrong!");
+    size_type index = HashTable<Key, T>::hashFunction(key);
+    if (!exists(key)) {
+        throw std::invalid_argument("Key is not present in the Hashtable");
+    }
+
+    if(key == arr_[index].first) {
+        return arr_[index].second;
+    } else {
+        ++index;
+        while(true) {
+            if(key == arr_[moduloIndex(index)].first) {
+                return arr_[moduloIndex(index)].second;
+            }
+        }
+    }
+    
+}
+
+template<class Key, class T>
+bool HashTable<Key, T>::insert(const key_type& key, const mapped_type& value) {
+    return insertPriv(key, value);
+}
+
+template<class Key, class T>
+bool HashTable<Key, T>::insert(const key_type& key, const mapped_type&& value) {
+    return insertPriv(key, std::move(value));
 }
 
 template<class Key, class T>
@@ -98,6 +187,25 @@ HashTable<Key, T>::size_type HashTable<Key, T>::moduloIndex(size_type index) con
     return index % capacity_; 
 }
 
-};
+template<class Key, class T>
+template<class Type>
+bool HashTable<Key, T>::insertPriv(const Key& key, Type&& value) {
+    if(exists(key)) {
+        return false;
+    }
+    assert(size_ < capacity_ && "Array got no more space");
+    size_type index {HashTable<Key, T>::hashFunction(key)};
+    while(true) {
+        if (!(arr_[moduloIndex(index)].first)) {
+            arr_[moduloIndex(index)].first = key;  
+            arr_[moduloIndex(index)].second = std::forward<Type>(value);  
+            ++size_;
+            return true;
+        }
+        ++index;
+    }
+}
+
+}
 
 #endif //HASH_TABLE_HPP
