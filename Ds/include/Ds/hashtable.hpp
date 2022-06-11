@@ -25,7 +25,7 @@ template<class Key, class T>
 class HashTable;
 
 template<class KeyF, class TF>
-void swap(HashTable<KeyF, TF>& first, HashTable<KeyF, TF>& second);
+void swap(HashTable<KeyF, TF>& first, HashTable<KeyF, TF>& second) noexcept;
 
 template<class Key, class T>
 class HashTable {
@@ -48,10 +48,10 @@ public:
     HashTable(HashTable&& other) noexcept;
 
     // Size functions
-    size_type size() const;
-    size_type capacity() const;
-    bool empty() const;
-    bool exists(const key_type& key) const;
+    constexpr size_type size() const;
+    constexpr size_type capacity() const;
+    constexpr bool empty() const;
+    constexpr bool exists(const key_type& key) const;
 
 
     // Modifiers
@@ -64,7 +64,7 @@ public:
     HashTable<Key, T>& operator=(HashTable<Key, T> other) noexcept;
 
     template<class KeyF, class TF>
-    friend void swap(HashTable<KeyF, TF>& first, HashTable<KeyF, TF>& second);
+    friend void swap(HashTable<KeyF, TF>& first, HashTable<KeyF, TF>& second) noexcept;
     
 private:
     size_type capacity_;
@@ -106,7 +106,6 @@ HashTable<Key, T>::HashTable(InputIt first, InputIt last): capacity_ {std::dista
     } else {
         throw std::invalid_argument("Container has to be of type std::pair!");
     }
-
 }
 
 template<class Key, class T>
@@ -124,25 +123,25 @@ HashTable<Key, T>::HashTable(HashTable&& other) noexcept: HashTable() {
 }
 
 template<class Key, class T>
-HashTable<Key, T>::size_type HashTable<Key, T>::size() const {
+constexpr HashTable<Key, T>::size_type HashTable<Key, T>::size() const {
     assert(size_ <= capacity_ && "Size can not be greater than 200");
     return size_;
 }
 
 template<class Key, class T>
-HashTable<Key, T>::size_type HashTable<Key, T>::capacity() const {
+constexpr HashTable<Key, T>::size_type HashTable<Key, T>::capacity() const {
     assert(size_ <= capacity_ && "Size can not be greater than capacity");
     return capacity_;
 }
 
 template<class Key, class T>
-bool HashTable<Key, T>::empty() const {
+constexpr bool HashTable<Key, T>::empty() const {
     assert(size_ <= capacity_ && "Size can not be greater than capacity");
     return size_ == 0;
 }
 
 template<class Key, class T>
-bool HashTable<Key, T>::exists(const key_type& key) const {
+constexpr bool HashTable<Key, T>::exists(const key_type& key) const {
     size_type index {hashFunction(key)};
     size_type old_index {index};
     while(true) {
@@ -282,7 +281,7 @@ HashTable<Key, T>& HashTable<Key, T>::operator=(HashTable<Key, T> other) noexcep
 }
 
 template<class KeyF, class TF>
-void swap(HashTable<KeyF, TF>& first, HashTable<KeyF, TF>& second) {
+void swap(HashTable<KeyF, TF>& first, HashTable<KeyF, TF>& second) noexcept {
     using std::swap;
 
     swap(first.size_, second.size_);

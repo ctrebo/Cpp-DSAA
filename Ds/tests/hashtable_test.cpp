@@ -66,18 +66,18 @@ TEST_CASE("Test own implemented Hashtable constructors") {
 
 TEST_CASE("Test own implemented Hashtable size functions") {
 
-    //size_type size() const;
+    //constexpr size_type size() const;
     SECTION("Return size of HashTable") {
         ds::HashTable<int, int> hs {{1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}};
         REQUIRE(hs.size() == 6);
     }
-    //size_type capacity() const;
+    //sconstexpr size_type capacity() const;
     SECTION("Return capacity of HashTable") {
         ds::HashTable<int, int> ht(20000);
         REQUIRE(ht.capacity()==20000);
     }
 
-    //bool empty() const;
+    //constexpr bool empty() const;
     SECTION("Return true if HashTable is empty") {
         ds::HashTable<int, int> ht {{1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}};
         REQUIRE(!ht.empty());
@@ -86,7 +86,7 @@ TEST_CASE("Test own implemented Hashtable size functions") {
         REQUIRE(ht1.empty());
     }
 
-    //bool exists(const key_type& key);
+    //constexpr bool exists(const key_type& key);
     SECTION("Returns true if key exists in HashTable") {
         ds::HashTable<int, int> ht {{1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}};
 
