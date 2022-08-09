@@ -11,7 +11,7 @@
 #include <exception>
 
 
-TEST_CASE("Test own implemented Hashtable constructors") {
+TEST_CASE("Test own implemented Hashtable constructors", "[hashtable]") {
 
     //HashTable(size_type size);
     SECTION("Construct HashTable with size passed to constructor") {
@@ -65,7 +65,7 @@ TEST_CASE("Test own implemented Hashtable constructors") {
     }
 }
 
-TEST_CASE("Test own implemented Hashtable size functions") {
+TEST_CASE("Test own implemented Hashtable size functions", "[hashtable]") {
 
     //constexpr size_type size() const;
     SECTION("Return size of HashTable") {
@@ -96,7 +96,7 @@ TEST_CASE("Test own implemented Hashtable size functions") {
     }
 }
 
-TEST_CASE("Test own implemented HashTables modifier functions") {
+TEST_CASE("Test own implemented HashTables modifier functions", "[hashtable]") {
     ds::HashTable<int, int> ht {{0, 1}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}};
 
     //T& operator[](const key_type& key);

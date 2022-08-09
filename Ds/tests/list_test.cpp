@@ -7,7 +7,7 @@
 #include <functional>
 
 
-TEST_CASE("Test own implemented List Class constructors") {
+TEST_CASE("Test own implemented List Class constructors", "[list]") {
 
     //List();
     SECTION("Default constructor, everything will be set to 0 or nullptr") {
@@ -62,7 +62,7 @@ TEST_CASE("Test own implemented List Class constructors") {
     }
 }
 
-TEST_CASE("Test own implemented List Class size functions") {
+TEST_CASE("Test own implemented List Class size functions", "[list]") {
     int length {5};
     ds::List<int> l(length);
 
@@ -80,7 +80,7 @@ TEST_CASE("Test own implemented List Class size functions") {
     }
 }
 
-TEST_CASE("Yest own implemented List Class assign functions") {
+TEST_CASE("Yest own implemented List Class assign functions", "[list]") {
     ds::List<int> l;
 
     //void assign(size_type count, const T& value);
@@ -115,7 +115,7 @@ TEST_CASE("Yest own implemented List Class assign functions") {
 }
 
 
-TEST_CASE("Test own implemented List Class iterator functions") {
+TEST_CASE("Test own implemented List Class iterator functions", "[list]") {
     ds::List<int> l {1, 2, 3, 4, 5};
     const ds::List<int> const_l {1, 2, 3, 4, 5};
 
@@ -132,7 +132,7 @@ TEST_CASE("Test own implemented List Class iterator functions") {
 
 }
 
-TEST_CASE("Test own implemented List Class access functions") {
+TEST_CASE("Test own implemented List Class access functions", "[list]") {
     int first_elem {1};
     int last_elem {10};
     ds::List<int> l{first_elem, 2, 3, 4, 5, 6, 7, 8, 9, last_elem};
@@ -154,7 +154,7 @@ TEST_CASE("Test own implemented List Class access functions") {
     }
 }
 
-TEST_CASE("Test own implemented List Class modifier functions") {
+TEST_CASE("Test own implemented List Class modifier functions", "[list]") {
     
     ds::List<int> l;
 
@@ -344,7 +344,7 @@ TEST_CASE("Test own implemented List Class modifier functions") {
 }
 
 
-TEST_CASE("Test own implemented List Class operation functions") {
+TEST_CASE("Test own implemented List Class operation functions", "[list]") {
     ds::List<int> l {1, 2, 3, 4, 5};
 
     // void merge(const List& other);
@@ -441,7 +441,7 @@ TEST_CASE("Test own implemented List Class operation functions") {
     }
 }
 
-TEST_CASE("Test own implemented List Class assignment operator") {
+TEST_CASE("Test own implemented List Class assignment operator", "[list]") {
     ds::List<int> l {1, 2, 3, 4, 5, 6};
 
     //List& operator=(const List& other);

@@ -7,7 +7,7 @@
 #include <functional>
 #include <initializer_list>
 
-TEST_CASE("Test own implemented BSTs Constructors") {
+TEST_CASE("Test own implemented BSTs Constructors", "[bst]") {
     //BST();
     SECTION("Set root to nullptr and size to 0") {
         ds::BST<int> b;
@@ -47,7 +47,7 @@ TEST_CASE("Test own implemented BSTs Constructors") {
     }
 }
 
-TEST_CASE("Test own implemented BSTs modifier functions") {
+TEST_CASE("Test own implemented BSTs modifier functions", "[bst]") {
 
     ds::BST<int> b;
     
@@ -139,7 +139,7 @@ TEST_CASE("Test own implemented BSTs modifier functions") {
     }
 }
 
-TEST_CASE("Test own implemented BSTs operator= functions") {
+TEST_CASE("Test own implemented BSTs operator= functions", "[bst]") {
     ds::BST<int> bst {5, 4, 7, 2, 1, 9, 15, -3};
 
     //BST<T> operator=(BST<T> other) noexcept;
