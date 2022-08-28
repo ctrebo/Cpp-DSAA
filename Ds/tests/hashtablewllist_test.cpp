@@ -10,7 +10,7 @@
 #include <utility>
 #include <exception>
 
-using size_type = std::size_t;
+using size_type = ds::HT<int, int>::size_type;
 
 TEST_CASE("Test custom ht constructors", "[ht]") {
     //HT();
@@ -167,7 +167,6 @@ TEST_CASE("Test custom ht access elements", "[ht]") {
 
     //mapped_type& at(const key_type& key);
     SECTION("If element doesnt exist, throw std::out_of_range, else return pointer to element") {
-        ds::HT<int, int> ht(10);
         ht.insert({3,4});
 
         CHECK_THROWS_AS(ht.at(4), std::out_of_range);
@@ -180,5 +179,13 @@ TEST_CASE("Test custom ht access elements", "[ht]") {
 
         CHECK_THROWS_AS(const_ht.at(10), std::out_of_range);
         CHECK(const_ht.at(3) == 4);
+    }
+
+    //template<class... Args>
+    //bool emplace(Args&&... args)
+    SECTION("If element exists, return false, else return true and emplace element") {
+        CHECK(ht.emplace(std::make_pair(12, 31)));
+        CHECK(!ht.emplace(std::make_pair(12, 31)));
+        CHECK(ht.size() == 1);
     }
 }

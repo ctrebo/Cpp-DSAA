@@ -51,6 +51,8 @@ public:
     template<class Type>
     bool insert_or_assign(Key&& k, Type&& obj);
     HT<Key, T>& operator=(HT<Key, T> other);
+    template<class...Args>
+    bool emplace(Args&&... args);
     
     // Element access
     mapped_type& operator[](const key_type& key);
@@ -71,12 +73,14 @@ private:
     static size_type addUpNums(size_type num);
     size_type hashFunction(const Key& key) const noexcept;
 
-    template<class Type>
-    bool insertPriv(const Key& key, Type&& val);
+    template<class KType, class Type>
+    bool insertPriv(KType&& key, Type&& val);
     template<class K>
     mapped_type& _lookup(K&& key);
     template<class KType,class Type>
     bool _insert_or_assign(KType&& key, Type&& val);
+    template<class Pair>
+    bool _emplace(Pair&& pair);
 
 };
 
@@ -170,6 +174,12 @@ HT<Key, T>& HT<Key, T>::operator=(HT<Key, T> other) {
 }
 
 template<Hashable Key, MappedConcept T>
+template<class...Args>
+bool HT<Key, T>::emplace(Args&&... args) {
+    return _emplace(value_type(std::forward<Args>(args)...));
+}
+
+template<Hashable Key, MappedConcept T>
 HT<Key, T>::mapped_type& HT<Key, T>::operator[](const key_type& key) {
     return _lookup(key);
 }
@@ -216,8 +226,8 @@ HT<Key, T>::size_type HT<Key, T>::hashFunction(const Key& key) const noexcept {
 }
 
 template<Hashable Key, MappedConcept T>
-template<class Type>
-bool HT<Key, T>::insertPriv(const Key& key, Type&& val) {
+template<class KType, class Type>
+bool HT<Key, T>::insertPriv(KType&& key, Type&& val) {
     size_type index {hashFunction(key)};
     if(exists(key).second) {
         return false;
@@ -227,13 +237,10 @@ bool HT<Key, T>::insertPriv(const Key& key, Type&& val) {
         throw std::length_error("Cant insert element into full hashtable");
     }
 
-    arr_[index].push_back(std::make_pair(key, std::forward<Type>(val)));
+    arr_[index].push_back(std::make_pair(std::forward<KType>(key), std::forward<Type>(val)));
     ++size_;
     return true;
 }
-
-template<class T>
-class TD;
 
 template<Hashable Key, MappedConcept T>
 template<class K>
@@ -285,6 +292,21 @@ void swap(HT<Key, T>& first, HT<Key, T>& second) noexcept {
     swap(first.arr_, second.arr_);
     swap(first.size_, second.size_);
     swap(first.capacity_, second.capacity_);
+}
+
+template <Hashable Key, MappedConcept T>
+template<class Pair>
+bool HT<Key, T>::_emplace(Pair&& pair) {
+    if (exists(pair.first).second) {
+        return false;
+    }
+    if(size_ >= capacity_) {
+        throw std::length_error("Cant insert element into full hashtable");
+    }
+    size_type index {hashFunction(pair.first)};
+    arr_[index].push_back(std::forward<Pair>(pair));
+    ++size_;
+    return true;
 }
 
 }
