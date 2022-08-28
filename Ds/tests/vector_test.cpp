@@ -1,4 +1,4 @@
-#include "vectorclass.hpp"
+#include "Ds/vectorclass.hpp"
 #include "custom_matchers.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -14,7 +14,7 @@
 #include <exception>
 #include <iterator>
 
-using size_type = VectorClass<int>::size_type;
+using size_type = ds::VectorClass<int>::size_type;
 
 // Every test in this TESTCASE will be required because
 // ctors are the base of the class. If they do not work, nothing will.
@@ -25,7 +25,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
 
     //VectorClass() = default;
     SECTION("Default ctor construct size and capacity to 0. No memory allocation happens") {
-        VectorClass<int> v;
+        ds::VectorClass<int> v;
         REQUIRE(v.size() == 0);
         REQUIRE(v.capacity() == 0);
         // If array hasny been allocated it 'bool(v.data())' is false
@@ -36,7 +36,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
     //VectorClass(size_type size, const T& value=T{}, const Allocator& alloc = Allocator());
     SECTION("Ctor constructs size and capacity to given number and array with default values") {
         size_type count {5};
-        VectorClass<int> v(count);
+        ds::VectorClass<int> v(count);
 
         REQUIRE(v.size() == count);
         REQUIRE(v.capacity() == count);
@@ -52,7 +52,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
     SECTION("Ctor constructs size and capacity to given number, and constructs array with given value") {
         size_type count {5};
         int value {1};
-        VectorClass<int> v(count, 1);
+        ds::VectorClass<int> v(count, 1);
 
         REQUIRE(v.size() == count);
         REQUIRE(v.capacity() == count);
@@ -67,7 +67,7 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
     //VectorClass(std::initializer_list<T> l, const Allocator& alloc = Allocator());
     SECTION("Ctor constructs size and capacity to size of initializer list") {
         std::initializer_list<int> initL {1, 2, 3, 4, 5};
-        VectorClass<int> v {initL};
+        ds::VectorClass<int> v {initL};
 
         REQUIRE(v.size() == initL.size());
         REQUIRE(v.capacity() == initL.size());
@@ -76,8 +76,8 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
 
     //VectorClass(const VectorClass& other);
     SECTION("Copy ctor copys size and capacity from other vector. Values get deep copied") {
-        VectorClass<int> v1{1, 2, 3 ,4 , 5};
-        VectorClass<int> v2{v1};
+        ds::VectorClass<int> v1{1, 2, 3 ,4 , 5};
+        ds::VectorClass<int> v2{v1};
 
         REQUIRE(v2.capacity() == v1.capacity());
         REQUIRE_THAT(v2, EqualsContainer(v1));
@@ -85,10 +85,10 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
 
     //VectorClass(const VectorClass&& other);
     SECTION("Move ctor moves size, capacity and array from one vector to another") {
-        VectorClass<int> v1 {1, 2, 3, 4, 5};
+        ds::VectorClass<int> v1 {1, 2, 3, 4, 5};
         // Use another Vector v3 because v1 should be empty after move
-        VectorClass<int> v3{v1};
-        VectorClass<int> v2{std::move(v1)};
+        ds::VectorClass<int> v3{v1};
+        ds::VectorClass<int> v2{std::move(v1)};
 
         REQUIRE(v2.capacity() == v3.capacity());
         REQUIRE_THAT(v2, EqualsContainer(v3));
@@ -100,8 +100,8 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
     
     //VectorClass(InputIt first, InputIt last, const Allocator& alloc = Allocator());
     SECTION("Ctor constructs size and capacity to range between first and last. Elements get deep copied") {
-        VectorClass<int> v1 {1, 2, 3, 4, 5};
-        VectorClass<int> v2(v1.cbegin(), v1.cend());
+        ds::VectorClass<int> v1 {1, 2, 3, 4, 5};
+        ds::VectorClass<int> v2(v1.cbegin(), v1.cend());
 
         REQUIRE(v2.capacity() == v1.capacity());
         REQUIRE_THAT(v2, EqualsContainer(v1));
@@ -109,8 +109,8 @@ TEST_CASE("Test own implemented vectors Constructors", "[VectorClass]") {
 }
 
 TEST_CASE("Test own implemented vectors 'operator=' functions") {
-    VectorClass<int> v1;
-    VectorClass<int> v2 {1, 2, 3, 4, 5};
+    ds::VectorClass<int> v1;
+    ds::VectorClass<int> v2 {1, 2, 3, 4, 5};
 
     //VectorClass<T, Allocator>& operator=(const VectorClass& other);
     SECTION("Copys size and capacity of 'other' and deep copies the values") {
@@ -123,7 +123,7 @@ TEST_CASE("Test own implemented vectors 'operator=' functions") {
     //VectorClass<T, Allocator>& operator=(VectorClass&& other);
     SECTION("Moves size and capacity of 'other' and takes ownership of array of 'other'") {
         // Use third vector because v2 should be empty after move assignment
-        VectorClass<int> v3 {v2};
+        ds::VectorClass<int> v3 {v2};
         v1 = std::move(v2);
         CHECK(v1.capacity() == v3.capacity());
         CHECK_THAT(v1, EqualsContainer(v3));
@@ -144,7 +144,7 @@ TEST_CASE("Test own implemented vectors 'operator=' functions") {
 }
 
 TEST_CASE("Test own implemented vectors assignment functions") {
-    VectorClass<int> v1;
+    ds::VectorClass<int> v1;
 
     //void assign(size_type count, const T& value);
     SECTION("Reserves space for 'count' elements and copys 'value' into each spot") {
@@ -161,7 +161,7 @@ TEST_CASE("Test own implemented vectors assignment functions") {
     //template<class InputIt>
     //void assign(InputIt first, InputIt last);
     SECTION("Reserves space for'std::distance(first, last) values deep copies the values'") {
-        VectorClass<int> v2 {1, 2, 3, 4, 5};
+        ds::VectorClass<int> v2 {1, 2, 3, 4, 5};
         v1.assign(v2.cbegin(), v2.cend());
 
         CHECK(v1.capacity() == v2.size());
@@ -183,7 +183,7 @@ TEST_CASE("Test own implemented vectors assignment functions") {
 TEST_CASE("Test own implemented vectors length and capacity functions", "[VectorClass]") {
     int starting_cap {5};
 
-    VectorClass<int> v(starting_cap);
+    ds::VectorClass<int> v(starting_cap);
 
     REQUIRE(v.size() == starting_cap);
     REQUIRE(v.capacity() == starting_cap);
@@ -240,7 +240,7 @@ TEST_CASE("Test own implemented element access functions") {
     int first_element {1};
     int last_element {5};
     
-    VectorClass<int> v {first_element, 2, 3, 4, last_element};
+    ds::VectorClass<int> v {first_element, 2, 3, 4, last_element};
 
     //constexpr reference front();
     SECTION("Returns reference to first element") {
@@ -251,7 +251,7 @@ TEST_CASE("Test own implemented element access functions") {
 
     //constexpr const_reference front() const;
     SECTION("Returns reference to first element, but that element cannot be changed") {
-        const VectorClass<int> const_v {v};
+        const ds::VectorClass<int> const_v {v};
         CHECK(const_v.front() == first_element);
     }
 
@@ -264,7 +264,7 @@ TEST_CASE("Test own implemented element access functions") {
 
     //constexpr const_reference back() const;
     SECTION("Returns reference to last element, but that element cannot be changed") {
-        const VectorClass<int> const_v {v};
+        const ds::VectorClass<int> const_v {v};
         CHECK(const_v.back() == last_element);
     }
 
@@ -302,7 +302,7 @@ TEST_CASE("Test own implemented element access functions") {
 
     //const_reference at(const size_type index) const;
     SECTION("Returns const reference to element at index 'index'") {
-        const VectorClass<int> const_v{v};
+        const ds::VectorClass<int> const_v{v};
         CHECK(const_v.at(0) == first_element);
         CHECK(const_v.at(const_v.size() - 1) == last_element);
 
@@ -314,7 +314,7 @@ TEST_CASE("Test own implemented element access functions") {
 }
 
 TEST_CASE("Test own implemented vectors modifier functions") {
-    VectorClass<int> v1 {1, 2, 3, 4, 5};
+    ds::VectorClass<int> v1 {1, 2, 3, 4, 5};
     size_type old_capacity {v1.capacity()};
 
     //void push_back(const T& value);
@@ -376,7 +376,7 @@ TEST_CASE("Test own implemented vectors modifier functions") {
         int val{5};
         size_type count {5};
         v1.insert(v1.cbegin(), count, val);
-        VectorClass<int> v2 (v1.cbegin(), v1.cbegin() + 5);
+        ds::VectorClass<int> v2 (v1.cbegin(), v1.cbegin() + 5);
         CHECK_THAT(v2, EqualsVal(val));
         CHECK(v1.capacity() > old_capacity);
 
@@ -388,11 +388,11 @@ TEST_CASE("Test own implemented vectors modifier functions") {
     }
     //void insert(const_iterator pos, InputIt first, InputIt last);
     SECTION("Inserts values between 'first' and 'last' at position 'pos'") {
-        VectorClass<int> v2 {5, 4, 3, 2, 1};
+        ds::VectorClass<int> v2 {5, 4, 3, 2, 1};
         v1.insert(v1.cend(), v2.cbegin(), v2.cend());
 
         CHECK(v1.capacity() > old_capacity);
-        CHECK_THAT(VectorClass<int>(v1.cend() - 5, v1.cend()), EqualsContainer(v2));
+        CHECK_THAT(ds::VectorClass<int>(v1.cend() - 5, v1.cend()), EqualsContainer(v2));
 
         SECTION("If the iterator 'pos' is not inside 'cbegin()' and 'cend' std::out_of_range gets thrown") {
             CHECK_THROWS_AS(v1.insert(v1.cend() + 1, v2.cbegin(), v2.cend()), std::out_of_range);
@@ -405,7 +405,7 @@ TEST_CASE("Test own implemented vectors modifier functions") {
         std::initializer_list<int> iList {1, 2, 3, 4, 5};
         v1.insert(v1.cbegin(), iList);
         CHECK(v1.capacity() > old_capacity);
-        CHECK_THAT(VectorClass<int>(v1.cbegin(), v1.cbegin() + iList.size()), EqualsContainer(iList));
+        CHECK_THAT(ds::VectorClass<int>(v1.cbegin(), v1.cbegin() + iList.size()), EqualsContainer(iList));
 
         SECTION("If the iterator 'pos' is not inside 'cbegin()' and 'cend' std::out_of_range gets thrown") {
             CHECK_THROWS_AS(v1.insert(v1.cbegin() -1, iList), std::out_of_range);
@@ -431,8 +431,8 @@ TEST_CASE("Test own implemented vectors modifier functions") {
 
     //void swap(VectorClass& other) noexcept;
     SECTION("Swaps element of 'other' with elements of 'this'") {
-        VectorClass<int> v2 {5, 4, 3, 2, 1};
-        VectorClass<int> v3 {v2};
+        ds::VectorClass<int> v2 {5, 4, 3, 2, 1};
+        ds::VectorClass<int> v3 {v2};
         v1.swap(v2);
         CHECK_THAT(v1, EqualsContainer(v3));
         CHECK_THAT(v2, !EqualsContainer(v3));
@@ -441,8 +441,8 @@ TEST_CASE("Test own implemented vectors modifier functions") {
 
 TEST_CASE("Test own implemented vectors begin, end and rend functions") {
     
-    VectorClass<int> v {1, 2, 3, 4, 5};
-    const VectorClass<int> const_v {1, 2, 3, 4, 5};
+    ds::VectorClass<int> v {1, 2, 3, 4, 5};
+    const ds::VectorClass<int> const_v {1, 2, 3, 4, 5};
 
     //constexpr iterator begin() noexcept;
     SECTION("Returns iterator to first element of vector") {

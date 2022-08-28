@@ -12,11 +12,9 @@
 #include <limits>
 #include <type_traits>
 
-template<class T>
-class TD;
+#include "concepts.hpp"
 
-template<class T>
-concept is_it = std::is_base_of_v< std::input_iterator_tag, typename std::iterator_traits<T>::iterator_category >;
+namespace ds {
 
 // Use to check if all values of variadic template are of the same type
 template<typename T, typename... Ts>
@@ -692,4 +690,5 @@ void VectorClass<T, Allocator>::append(Type&& val) {
     traits_t::construct(alloc_, array_ + (size_++), std::forward<Type>(val));
 }
 
+}
 #endif // VECTORCLASS_HPP

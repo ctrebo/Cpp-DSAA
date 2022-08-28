@@ -10,6 +10,7 @@ set(header_files
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Ds/hashtablewllist.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Ds/list.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Ds/binarysearchtree.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Ds/vectorclass.hpp
 )
 
 add_library(Ds INTERFACE)
