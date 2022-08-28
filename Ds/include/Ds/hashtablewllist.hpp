@@ -8,10 +8,18 @@
 #include <list>
 #include <initializer_list>
 #include <iterator>
+#include <utility>
+#include <iterator>
 
 namespace ds {
 
-template<Hashable Key, class T>
+template <Hashable Key, MappedConcept T>
+class HT;
+
+template <Hashable Key, MappedConcept T>
+void swap(HT<Key, T>& first, HT<Key, T>& second) noexcept;
+
+template<Hashable Key, MappedConcept T>
 class HT {
 public:
     using key_type = Key;
@@ -27,16 +35,32 @@ public:
     HT(std::initializer_list<value_type> iList);
     template<is_it InputIt>
     HT(InputIt first, InputIt last);
+    HT(const HT& other);
+    HT(HT&& other) noexcept;
 
-    constexpr size_type capacity() const;
-    constexpr size_type size() const;
+    constexpr size_type capacity() const noexcept;
+    constexpr size_type size() const noexcept;
 
-    constexpr bool exists(const key_type& key) const;
+    constexpr std::pair<T*, bool> exists(const key_type& key) const;
 
     // Modifiers
     bool insert(const key_type& key, const mapped_type& value);
     bool insert(const value_type& pair);
-    //value_type& operator[](const key_type& key);
+    template<class Type>
+    bool insert_or_assign(const Key& k, Type&& obj);
+    template<class Type>
+    bool insert_or_assign(Key&& k, Type&& obj);
+    HT<Key, T>& operator=(HT<Key, T> other);
+    
+    // Element access
+    mapped_type& operator[](const key_type& key);
+    mapped_type& operator[](key_type&& key);
+    mapped_type& at(const key_type& key);
+    const mapped_type& at(const key_type& key) const;
+
+
+    friend void swap<Key, T>(HT<Key, T>& first, HT<Key, T>& second) noexcept;
+
 
 private:
     size_type capacity_;   
@@ -45,26 +69,31 @@ private:
 
 private:
     static size_type addUpNums(size_type num);
-    size_type hashFunction(const Key& key) const;
+    size_type hashFunction(const Key& key) const noexcept;
 
     template<class Type>
     bool insertPriv(const Key& key, Type&& val);
+    template<class K>
+    mapped_type& _lookup(K&& key);
+    template<class KType,class Type>
+    bool _insert_or_assign(KType&& key, Type&& val);
+
 };
 
-template<Hashable Key, class T>
+template<Hashable Key, MappedConcept T>
 HT<Key, T>::HT(): capacity_ {0}, size_ {0}, arr_(0) {};
 
-template<Hashable Key, class T>
+template<Hashable Key, MappedConcept T>
 HT<Key, T>::HT(size_type size): capacity_ {size}, size_ {0}, arr_(capacity_) {};
 
-template<Hashable Key, class T>
+template<Hashable Key, MappedConcept T>
 HT<Key, T>::HT(std::initializer_list<value_type> iList): HT(iList.size() < 10000 ? 10000 : iList.size() * 2) {
    for(const auto& elem: iList) {
         insertPriv(elem.first, elem.second);
    }
 }
 
-template<Hashable Key, class T>
+template<Hashable Key, MappedConcept T>
 template<is_it InputIt>
 HT<Key, T>::HT(InputIt first, InputIt last): HT(std::distance(first, last) < 10000 ? 10000 : std::distance(first, last) * 2) {
     for(auto it=first; it != last; ++it) {
@@ -72,49 +101,103 @@ HT<Key, T>::HT(InputIt first, InputIt last): HT(std::distance(first, last) < 100
     }
 }
 
-template<Hashable Key, class T>
-constexpr HT<Key, T>::size_type HT<Key, T>::capacity() const {
+template<Hashable Key, MappedConcept T>
+HT<Key, T>::HT(const HT& other):
+    capacity_ {other.capacity_},
+    size_ {other.size_},
+    arr_ {other.arr_}
+{
+}
+
+template<Hashable Key, MappedConcept T>
+HT<Key, T>::HT(HT&& other) noexcept: HT(){
+    swap(*this, other);
+}
+
+template<Hashable Key, MappedConcept T>
+constexpr HT<Key, T>::size_type HT<Key, T>::capacity() const noexcept {
     assert(size_ <= capacity_ && "Size can not be bigger than the capacity");
     return capacity_;
 }
 
-template<Hashable Key, class T>
-constexpr HT<Key, T>::size_type HT<Key, T>::size() const {
+template<Hashable Key, MappedConcept T>
+constexpr HT<Key, T>::size_type HT<Key, T>::size() const noexcept {
     assert(size_ <= capacity_ && "Size can not be bigger than the capacity");
     return size_;
 }
 
-template<Hashable Key, class T>
-constexpr bool HT<Key, T>::exists(const key_type& key) const {
+template<Hashable Key, MappedConcept T>
+constexpr std::pair<T*, bool> HT<Key, T>::exists(const key_type& key) const {
     size_type index {hashFunction(key)};
     
-    auto list = arr_[index];
+    const auto& list = arr_[index];
     for(auto it=list.begin(); it != list.end(); ++it) {
         if((*it).first == key) {
-            return true;
+            return std::make_pair(const_cast<T*>(&((*it).second)), true);
         }
     }
 
-    return false;
+    return std::make_pair(nullptr, false);
 }
-
-template<Hashable Key, class T>
+template<Hashable Key, MappedConcept T>
 bool HT<Key, T>::insert(const key_type& key, const mapped_type& value) {
     return insertPriv(key, value);
 }
 
-template<Hashable Key, class T>
+template<Hashable Key, MappedConcept T>
 bool HT<Key, T>::insert(const value_type& pair) {
     return insertPriv(pair.first, pair.second);
 }
 
-//template<Hashable Key, class T>
-//HT<Key, T>::value_type& HT<Key, T>::operator[](const key_type& key) {
+template<Hashable Key, MappedConcept T>
+template<class Type>
+bool HT<Key, T>::insert_or_assign(const Key& key, Type&& obj) {
+    return _assign_or_insert(key, std::forward<Type>(obj));
+}
+
+template<Hashable Key, MappedConcept T>
+template<class Type>
+bool HT<Key, T>::insert_or_assign(Key&& key, Type&& obj) {
+    return _insert_or_assign(std::move(key), std::forward<Type>(obj));
+}
 
 
-//}
+template<Hashable Key, MappedConcept T>
+HT<Key, T>& HT<Key, T>::operator=(HT<Key, T> other) {
+    swap(*this, other);
+    
+    return *this;
+}
 
-template<Hashable Key, class T>
+template<Hashable Key, MappedConcept T>
+HT<Key, T>::mapped_type& HT<Key, T>::operator[](const key_type& key) {
+    return _lookup(key);
+}
+
+template<Hashable Key, MappedConcept T>
+HT<Key, T>::mapped_type& HT<Key, T>::operator[](key_type&& key) {
+    return _lookup(std::move( key ));
+}
+
+template<Hashable Key, MappedConcept T>
+HT<Key, T>::mapped_type& HT<Key, T>::at(const key_type& key) {
+    auto pair = exists(key);
+    if(!(pair.second)) {
+        throw std::out_of_range("Element does not exist!");
+    }
+    return *(pair.first);
+}
+
+template<Hashable Key, MappedConcept T>
+const HT<Key, T>::mapped_type& HT<Key, T>::at(const key_type& key) const {
+    auto pair = exists(key);
+    if(!(pair.second)) {
+        throw std::out_of_range("Element does not exist!!");
+    }
+    return *(pair.first);
+}
+
+template<Hashable Key, MappedConcept T>
 HT<Key, T>::size_type HT<Key, T>::addUpNums(size_type num) {
     std::size_t sum {0}; 
     size_type new_num = num;
@@ -126,27 +209,82 @@ HT<Key, T>::size_type HT<Key, T>::addUpNums(size_type num) {
     return sum;
 }
 
-template<Hashable Key, class T>
-HT<Key, T>::size_type HT<Key, T>::hashFunction(const Key& key) const {
+template<Hashable Key, MappedConcept T>
+HT<Key, T>::size_type HT<Key, T>::hashFunction(const Key& key) const noexcept {
     assert(capacity_ > 0 && "Capacity has to be greater than 0");
-    return (HT<Key, T>::addUpNums(std::hash<T>{}(key)) % capacity_);
+    return (HT<Key, T>::addUpNums(std::hash<Key>{}(key)) % capacity_);
 }
 
-template<Hashable Key, class T>
+template<Hashable Key, MappedConcept T>
 template<class Type>
 bool HT<Key, T>::insertPriv(const Key& key, Type&& val) {
-        size_type index {hashFunction(key)};
-        if(exists(key)) {
-            return false;
-        }
+    size_type index {hashFunction(key)};
+    if(exists(key).second) {
+        return false;
+    }
 
+    if(size_ >= capacity_) {
+        throw std::length_error("Cant insert element into full hashtable");
+    }
+
+    arr_[index].push_back(std::make_pair(key, std::forward<Type>(val)));
+    ++size_;
+    return true;
+}
+
+template<class T>
+class TD;
+
+template<Hashable Key, MappedConcept T>
+template<class K>
+HT<Key, T>::mapped_type& HT<Key,T>::_lookup(K&& key) {
+    size_type index {hashFunction(key)};
+    
+    auto pair = exists(key);
+    if(!(pair.second)) {
         if(size_ >= capacity_) {
             throw std::length_error("Cant insert element into full hashtable");
         }
 
-        arr_[index].push_back(std::make_pair(key, std::forward<Type>(val)));
+        arr_[index].push_back(std::make_pair(std::forward<K>(key), T()));
+        ++size_;
+
+        auto& list = arr_[index];
+
+        auto it = list.begin();
+        std::advance(it, list.size() - 1);
+        return (*it).second;
+    }
+    return *(pair.first);
+}
+
+template <Hashable Key, MappedConcept T>
+template<class KType,class Type>
+bool HT<Key, T>::_insert_or_assign(KType&& key, Type&& val) {
+    auto pair = exists(key);
+    if(pair.second) {
+        *(pair.first) = std::forward<Type>(val);
+        return false;
+    } else {
+        size_type index {hashFunction(key)};
+        if(size_ >= capacity_) {
+            throw std::length_error("Cant insert element into full hashtable");
+        }
+
+        arr_[index].push_back(std::make_pair(std::forward<KType>( key ), std::forward<Type>(val)));
         ++size_;
         return true;
+    }
+
+}
+
+template <Hashable Key, MappedConcept T>
+void swap(HT<Key, T>& first, HT<Key, T>& second) noexcept {
+    using std::swap;
+
+    swap(first.arr_, second.arr_);
+    swap(first.size_, second.size_);
+    swap(first.capacity_, second.capacity_);
 }
 
 }
